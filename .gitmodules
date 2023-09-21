@@ -1,3 +1,0 @@
-[submodule "ns-3-dev"]
-	path = ns-3-dev
-	url = git@gitlab.com:evallen1/ns-3-dev.git
