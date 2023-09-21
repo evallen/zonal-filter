@@ -7,15 +7,17 @@ Evaluation and development repository for research into performant authenticatio
 This repository is a single module designed for use within the [ns-3](https://www.nsnam.org/)
 network simulator.
 
-Experiments can each be found in the `examples/` directory with supporting code 
-in the `helper/` and `model/` directories.
+Experiments can each be found in the [`examples/`](examples/) directory with supporting code 
+in the [`helper/`](helper/) and [`model/`](model/) directories.
 
-Results can be found in the `results/` directory for each experiment.
+Results can be found in the [`results/`](results/) directory for each experiment.
 For example, you can view the results of the first Zonal Latency Measurement
 experiment by viewing 
 [`results/zonal-latency-measurement/stream.csv`](results/zonal-latency-measurement/stream.csv).
 
 For more detail, please see the source code documentation in each file.
+For example, see information on the first latency experiment 
+[here](examples/zonal-latency-measurement.cc).
 
 ## Installation
 
