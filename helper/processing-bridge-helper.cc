@@ -1,5 +1,9 @@
 /**
- * Based on the ProcessingBridgeHelper
+ * \file
+ * \ingroup zonal-research
+ *
+ * Based on the BridgeHelper.
+ * Contains the implementation of the ProcessingBridgeHelper.
  */
 
 #include "processing-bridge-helper.h"

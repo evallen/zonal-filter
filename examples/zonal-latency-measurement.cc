@@ -5,10 +5,59 @@
  *
  */
 
-// Network topology
-// An arbitrary zonal network with some number of zones and some
-// number of nodes in each zone. The topology is defined by
-// the ZONE_COUNTS constant in mysimulation.h. 
+/**
+ * \file 
+ * \ingroup zonal-research
+ *
+ * Implementation for the ZonalLatencyMeasurement simulation.
+ *
+ * Network topology: 
+ *  One or more zones with one or more endpoints each
+ *  connected to a zonal gateway in a tree-like structure.
+ *
+ *  
+ *
+ * For example, a zonal network with topology = {2, 3}
+ *  (two zones, one with 2 endpoints and one with 3) would look
+ *  like this:
+ *
+ *         ZONE ONE                       |                ZONE TWO
+ *                                        |
+ *    n1.1 ----|                          |                          |---- n2.1
+ *             |                                                     |
+ *            n1.0 == n1.M ===== n1.N == nGW == n2.N ===== n2.M -- n2.0 -- n2.2
+ *             |                                                     |
+ *    n1.2 ----|                          |                          |---- n2.3
+ *
+ *    where nodes are represented as:
+ *      nGW     - is the gateway
+ *      n1.*    - is the zone-one nodes (n1.1)
+ *      n2.*    - is the zone-two nodes (n2.1)
+ *      n*.M    - is the MACsec transceiver for a zonal controller (n1.M)
+ *      n*.N    - is the MACsec transceiver for the gateway on a given zone (n1.N) (NOTE*)
+ *      n*.0    - is the zonal controller for a zone (n1.0)
+ *
+ *    and where connections are respresented as:
+ *      ---     - 100Mbps Automotive Ethernet
+ *      ===     - 1000Mbps Automotive Ethernet
+ *
+ *    Depending on the topology specified in the header file,
+ *    the simulation could have more zones with different numbers
+ *    of endpoints, etc.
+ *
+ *    NOTE*: 
+ *      Currently, we simulate our network with a MACsec transceiver on each side
+ *      of each 1000Mbps backbone connection (i.e., an inter-zonal message gets encrypted
+ *      when leaving a zonal controller, decrypted when entering the gateway, encrypted
+ *      when leaving the gateway, and then decrypted again when entering a zonal
+ *      controller). 
+ *
+ *      It is possible that we could implement the MACsec transceivers so that 
+ *      we only have one per zone (such as one on each ZC, and allow the messsages
+ *      to go through the GW encrypted). 
+ *
+ *      This should be the topic of a future simulation.
+ */
 
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
@@ -17,7 +66,6 @@
 #include "ns3/network-module.h"
 #include "ns3/bridge-module.h"
 
-#include "ns3/macsec-trx-helper.h"
 #include "zonal-latency-measurement.h"
 #include "ns3/processing-bridge-helper.h"
 #include "ns3/processing-bridge-net-device.h"
@@ -37,9 +85,6 @@ NS_LOG_COMPONENT_DEFINE("ZonalNetwork");
 // === Parameters =================================================================
 
 bool verbose = false;
-bool use_drop = false;
-ns3::Time timeout = ns3::Seconds(0);
-
 
 // === Command Line Callbacks =====================================================
 
@@ -50,29 +95,6 @@ SetVerbose(const std::string& value)
     return true;
 }
 
-bool
-SetDrop(const std::string& value)
-{
-    use_drop = true;
-    return true;
-}
-
-bool
-SetTimeout(const std::string& value)
-{
-    try
-    {
-        timeout = ns3::Seconds(std::stof(value));
-        return true;
-    }
-    catch (...)
-    {
-        return false;
-    }
-    return false;
-}
-
-
 // === Setup Helpers ==============================================================
 
 void
@@ -82,24 +104,11 @@ ParseCommandLine(int argc, char *argv[])
     CommandLine cmd(__FILE__);
     cmd.AddValue("v", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
     cmd.AddValue("verbose", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
-    cmd.AddValue("d", "Use Drop Controller (Learning if not specified).", MakeCallback(&SetDrop));
-    cmd.AddValue("drop",
-                 "Use Drop Controller (Learning if not specified).",
-                 MakeCallback(&SetDrop));
-    cmd.AddValue("t",
-                 "Learning Controller Timeout (has no effect if drop controller is specified).",
-                 MakeCallback(&SetTimeout));
-    cmd.AddValue("timeout",
-                 "Learning Controller Timeout (has no effect if drop controller is specified).",
-                 MakeCallback(&SetTimeout));
-
     cmd.Parse(argc, argv);
 }
 
-MySimulation::MySimulation(bool verbose, bool use_drop, ns3::Time timeout) :
-    verbose(verbose),
-    use_drop(use_drop),
-    timeout(timeout)
+ZonalLatencyMeasurement::ZonalLatencyMeasurement(bool verbose) :
+    verbose(verbose)
 {
     zoneSwitchDevices = std::vector<NetDeviceContainer>(NumZones());
     zoneSwitchMacSecTrxDevices = std::vector<NetDeviceContainer>(NumZones());
@@ -148,11 +157,11 @@ PrintGateway(Ptr<Node> node, std::ofstream & out)
 }
 
 void
-MySimulation::PrintNodeInfo()
+ZonalLatencyMeasurement::PrintNodeInfo()
 {
     NS_LOG_FUNCTION(this);
 
-    std::ofstream out("mysimulation.ips");
+    std::ofstream out("zonal-latency-measurement.ips");
 
     out << "GATEWAY" << "\n";
     PrintGateway(gateway.Get(0), out);
@@ -177,7 +186,7 @@ MySimulation::PrintNodeInfo()
 }
 
 void
-MySimulation::Setup()
+ZonalLatencyMeasurement::Setup()
 {
     NS_LOG_FUNCTION(this);
 
@@ -190,13 +199,13 @@ MySimulation::Setup()
 }
 
 int 
-MySimulation::NumZones()
+ZonalLatencyMeasurement::NumZones()
 {
     return zone_counts.size();
 }
 
 void
-MySimulation::CreateNodes()
+ZonalLatencyMeasurement::CreateNodes()
 {
     NS_LOG_FUNCTION(this);
     
@@ -211,7 +220,7 @@ MySimulation::CreateNodes()
 }
 
 void
-MySimulation::BuildZoneTopos()
+ZonalLatencyMeasurement::BuildZoneTopos()
 {
     NS_LOG_FUNCTION(this);
 
@@ -239,7 +248,7 @@ MySimulation::BuildZoneTopos()
 }
 
 void
-MySimulation::BuildBackboneTopo()
+ZonalLatencyMeasurement::BuildBackboneTopo()
 {
     NS_LOG_FUNCTION(this);
 
@@ -282,14 +291,12 @@ MySimulation::BuildBackboneTopo()
 }
 
 void
-MySimulation::BuildSwitches()
+ZonalLatencyMeasurement::BuildSwitches()
 {
     // Create the switch netdevices, which will do the packet switching
     // Also create the MacSecTrxs
     for (int zone = 0; zone < NumZones(); zone++) {
         Ptr<Node> switchNode = zoneSwitches[zone].Get(0);
-        // BuildOpenFlowSwitch(switchNode, zoneSwitchDevices[zone]);
-        // BuildBridgeSwitch(switchNode, zoneSwitchDevices[zone]);
         BuildZonalSwitch(switchNode, zoneSwitchDevices[zone]);
 
         // MacSecTrxs
@@ -302,7 +309,7 @@ MySimulation::BuildSwitches()
 }
 
 void
-MySimulation::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
+ZonalLatencyMeasurement::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
 {
     ProcessingBridgeHelper pBridge;
     pBridge.SetDeviceAttribute("ProcessingDelay", 
@@ -328,7 +335,7 @@ ComputePenaMacSecLatency(uint32_t packet_size_bytes) {
 }
 
 void
-MySimulation::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices)
+ZonalLatencyMeasurement::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices)
 {
     ProcessingBridgeHelper macSecTrx;
     macSecTrx.SetDeviceAttribute("ProcessingDelay",
@@ -343,7 +350,7 @@ MySimulation::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDev
 }
 
 void
-MySimulation::BuildBridgeSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
+ZonalLatencyMeasurement::BuildBridgeSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
 {
     // NS_LOG_FUNCTION(this << switchNode << switchDevices);
     
@@ -378,7 +385,7 @@ MySimulation::BuildOpenFlowSwitch(Ptr<Node> & switchNode, NetDeviceContainer & s
 #endif
 
 void
-MySimulation::BuildTopology()
+ZonalLatencyMeasurement::BuildTopology()
 {
     NS_LOG_FUNCTION(this);
 
@@ -388,7 +395,7 @@ MySimulation::BuildTopology()
 }
 
 void
-MySimulation::AssignIpAddresses()
+ZonalLatencyMeasurement::AssignIpAddresses()
 {
     NS_LOG_FUNCTION(this);
 
@@ -419,7 +426,7 @@ MySimulation::AssignIpAddresses()
 }
 
 void
-MySimulation::CreateApplications()
+ZonalLatencyMeasurement::CreateApplications()
 {
     NS_LOG_FUNCTION(this);
 
@@ -458,7 +465,7 @@ MySimulation::CreateApplications()
 }
 
 void
-MySimulation::ConfigureTracing()
+ZonalLatencyMeasurement::ConfigureTracing()
 {
     NS_LOG_FUNCTION(this);
 
@@ -467,7 +474,7 @@ MySimulation::ConfigureTracing()
     // Trace output will be sent to the file "openflow-switch.tr"
     //
     AsciiTraceHelper ascii;
-    csmaHelper.EnableAsciiAll(ascii.CreateFileStream("mysimulation.tr"));
+    csmaHelper.EnableAsciiAll(ascii.CreateFileStream("zonal-latency-measurement.tr"));
 
     //
     // Also configure some tcpdump traces; each interface will be traced.
@@ -476,7 +483,7 @@ MySimulation::ConfigureTracing()
     // and can be read by the "tcpdump -r" command (use "-tt" option to
     // display timestamps correctly)
     //
-    csmaHelper.EnablePcapAll("mysimulation", true);
+    csmaHelper.EnablePcapAll("zonal-latency-measurement", true);
 
 
 }
@@ -492,7 +499,7 @@ main(int argc, char* argv[])
     // run-time, via command-line arguments
     //
     ParseCommandLine(argc, argv);
-    MySimulation sim(verbose, use_drop, timeout);
+    ZonalLatencyMeasurement sim(verbose);
 
     if (verbose)
     {

@@ -1,3 +1,6 @@
+#ifndef ZONAL_LATENCY_MEASUREMENT_H
+#define ZONAL_LATENCY_MEASUREMENT_H
+
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
@@ -8,8 +11,22 @@
  * \defgroup zonal-research Module containing code for automotive zonal research.
  */
 
-using namespace::ns3;
+/**
+ * \file
+ * \ingroup zonal-research
+ * Declaration for the ZonalLatencyMeasurement simulation.
+ *
+ * For details on the simulation, see the zonal-latency-measurement.cc file.
+ */
 
+namespace ns3 
+{
+
+/** 
+ * Represents the zonal topology. Each int represents the number of
+ * endpoints in each zone, so { 6, 3, 8, 6 } is a four-zone network
+ * where the zones have 6, 3, 8, and 6 endpoints, respectively.
+ */
 typedef std::vector<int> Topology;
 
 const DataRate DATARATE_100BASET("100Mbps");
@@ -26,28 +43,51 @@ const Time ZONAL_CONTROLLER_PROCESSING_DELAY("30ns");
 
 const DataRate MACSEC_TRX_PROCESSING_SPEED("1000Mbps");
 const QueueSize MACSEC_TRX_INPUT_QUEUE_SIZE("100p");
+
 // MACSEC_TRX_PROCESSING_DELAY is set as a callback to 
 // `ComputePenaMacSecLatency`, which uses a linear regression of 
 // the latency data from Pena et al. to guess the latency
 // of the MARVELL board they used.
 
+/** Actual zone topoology for the simulation. */
 const Topology ZONE_COUNTS = { 6, 3, 8, 6 };
 
 
-class MySimulation {
+/**
+ * \ingroup zonal-research
+ *
+ * Class to run a simulation of latency across a zonal network
+ * with the proposed security additions.
+ *
+ * NOTE: For details on the zonal architecture tested, see the associated
+ * *.cc file (zonal-latency-measurement.cc).
+ */
+class ZonalLatencyMeasurement {
 
 public:
-    MySimulation(bool verbose, bool use_drop, ns3::Time timeout);
+    /** Create a new simulation object.
+     *
+     * \param verbose Whether or not to print extra logging information.
+     */
+    ZonalLatencyMeasurement(bool verbose);
 
+    /** Construct the simuluation. */
     void Setup();
+
+    /** 
+     * Get the number of zones in the sinmulation. 
+     * \return The number of zones.
+     */
     int NumZones();
 
+    /** 
+     * Print the IPs of all the nodes with their node IDs 
+     * to a file 'zonal-latency-measurement.ips'.
+     */
     void PrintNodeInfo();
 
 private:
     bool verbose;
-    bool use_drop;
-    ns3::Time timeout;
 
     CsmaHelper csmaHelper;
     
@@ -96,3 +136,7 @@ private:
     void ConfigureTracing();
 
 };
+
+}
+
+#endif /* ZONAL_LATENCY_MEASUREMENT_H */

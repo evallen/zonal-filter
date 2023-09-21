@@ -1,5 +1,9 @@
 /**
- * Based off of the BridgeHelper
+ * \file
+ * \ingroup zonal-research
+ *
+ * Based off of the BridgeHelper.
+ * Contains the declaration of the ProcessingBridgeHelper class.
  */
 #ifndef PROCESSING_BRIDGE_HELPER_H
 #define PROCESSING_BRIDGE_HELPER_H
@@ -15,10 +19,20 @@ namespace ns3
 class Node;
 class AttributeValue;
 
+/**
+ * \ingroup zonal-research
+ *
+ * Helper to create a ProcessingBridgeNetDevice that connects a 
+ * set of NetDevices in a NetDeviceContainer on the same LAN segment.
+ *
+ * Use like any other |ns3| helper - use ``Install`` on the net devices
+ * you want.
+ */
 class ProcessingBridgeHelper
 {
   public:
     ProcessingBridgeHelper();
+
     /**
      * Set an attribute on each ns3::ProcessingBridgeNetDevice created by
      * ProcessingBridgeHelper::Install

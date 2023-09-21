@@ -1,3 +1,10 @@
+/**
+ * \file
+ * \ingroup zonal-research
+ *
+ * Class ProcessingBridgeNetDevice implementation.
+ * See the header file for class documentation.
+ */
 
 #include "processing-bridge-net-device.h"
 
@@ -5,8 +12,9 @@ namespace ns3
 {
 
 NS_LOG_COMPONENT_DEFINE("ProcessingBridgeNetDevice");
-
 NS_OBJECT_ENSURE_REGISTERED(ProcessingBridgeNetDevice);
+
+/** These two lines allow a QueuedPacket to be used in a Queue. */
 NS_OBJECT_TEMPLATE_CLASS_DEFINE(Queue, QueuedPacket);
 NS_OBJECT_TEMPLATE_CLASS_DEFINE(DropTailQueue, QueuedPacket);
 

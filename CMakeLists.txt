@@ -12,14 +12,12 @@ endif()
 
 set(source_files
   model/processing-bridge-net-device.cc
-  helper/macsec-trx-helper.cc
   helper/processing-bridge-helper.cc
   helper/stream-latency-trace-helper.cc
 )
 
 set(header_files
   model/processing-bridge-net-device.h
-  helper/macsec-trx-helper.h
   helper/processing-bridge-helper.h
   helper/stream-latency-trace-helper.h
 )

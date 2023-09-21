@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \ingroup zonal-research
+ *
+ * Contains implementation of the StreamLatencyTraceHelper.
+ */
 #include "stream-latency-trace-helper.h"
 
 #include "ns3/core-module.h"
@@ -23,7 +29,7 @@ StreamLatencyTraceHelper::Install(Ptr<CsmaNetDevice> sendingDevice,
 
     sendingDevice->TraceConnectWithoutContext(
         "MacTx", 
-        MakeBoundCallback(&StreamLatencyTraceHelper::SendCallback, stream)
+        MakeBoundCallback(&StreamLatencyTraceHelper::SendCallback)
     );
 
     receivingApplication->TraceConnectWithoutContext(
@@ -33,17 +39,13 @@ StreamLatencyTraceHelper::Install(Ptr<CsmaNetDevice> sendingDevice,
 }
 
 void
-StreamLatencyTraceHelper::SendCallback(Ptr<OutputStreamWrapper> stream, 
-                                       Ptr<const Packet> p)
+StreamLatencyTraceHelper::SendCallback(Ptr<const Packet> p)
 {
     NS_LOG_FUNCTION_NOARGS();
 
     TimestampTag tag;
     tag.SetTimestamp(Simulator::Now());
-    NS_LOG_UNCOND("Sending packet at " << Simulator::Now());
     p->AddPacketTag(tag);
-    NS_LOG_UNCOND("Tag contents on send are " << tag.GetTimestamp());
-    // p->PrintByteTags(std::cout);
 }
 
 void

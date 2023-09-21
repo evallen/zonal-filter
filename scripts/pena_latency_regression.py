@@ -1,3 +1,13 @@
+"""pena_latench_regression.py
+
+This file does a quick linear regression on the latency data 
+from the paper by Pena et al. measuring the latency of encryption
+and decryption (combined) on the MARVELL 88E1680M board.
+
+The resulting model should have a very high R-squared value, indicating
+a strong linear correlation between packet size and MACsec latency.
+"""
+
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 

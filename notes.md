@@ -2,7 +2,7 @@
 
 ## Logging and Measurements
 
-* Come up with a mechanism to measure latency of a stream (sender -> receiver)
+* **(DONE)** Come up with a mechanism to measure latency of a stream (sender -> receiver)
   over many packets. It would be nice to have an output file of packet send times, receive times,
   and overall delays for processing in a Python analysis script so we could create a histogram
   of latencies and take averages and all that.
@@ -29,3 +29,6 @@
 * Throughput ... do we have to measure this? We sort of dictate what it 'must be'. Think
   about this more. Maybe if, for example, you have _so many nodes_ on a zone that they
   can't all send at 100Mbps?
+
+* **(DONE)** Fix MacSecTrxHelper to create nodes that use the generic ProcessingBridgeAbstractDevice 
+  instead of the PointToPointNetDevice abstraction that we currently have.
