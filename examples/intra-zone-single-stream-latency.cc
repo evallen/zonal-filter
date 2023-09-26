@@ -2,11 +2,11 @@
  * \file 
  * \ingroup zonal-research
  *
- * Implementation for the ZonalLatencyMeasurement simulation.
+ * Implementation for the IntraZoneSingleStreamLatency simulation.
  *
  * Uses a basic ZonalLayoutHelper layout and the default settings.
  * Simulates just a single stream of traffic from one node to one
- * in another zone.
+ * in the same zone.
  */
 
 #include "ns3/applications-module.h"
@@ -31,7 +31,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("ZonalLatencyMeasurement");
+NS_LOG_COMPONENT_DEFINE("IntraZoneSingleStreamLatency");
 
 
 // === Parameters =================================================================
@@ -43,7 +43,7 @@ GetConfig()
 {
     ZonalLayoutConfiguration config;
 
-    config.title = "zonal-latency-measurement";
+    config.title = "intra-zone-single-stream-latency";
 
     config.propagationDelay = Time("2ns");
 
@@ -70,7 +70,7 @@ GetConfig()
 /**
  * Create a single UDP stream that we track. 
  *
- * Sends from 10.
+ * Sends from 10.1.1.3 to 10.1.1.2 (within the same zone).
  */
 void
 CreateApplications(ZonalLayoutHelper & zonal)
@@ -81,12 +81,12 @@ CreateApplications(ZonalLayoutHelper & zonal)
 
     ApplicationContainer app;
 
-    // Create the sender (zone 1, node 1: 10.1.2.3)
+    // Create the sender (zone 1, node 1: 10.1.1.3)
     OnOffHelper onoff("ns3::UdpSocketFactory",
                       Address(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
     onoff.SetConstantRate(DataRate("500kb/s"));
 
-    app = onoff.Install(zonal.GetNode(1, 1));
+    app = onoff.Install(zonal.GetNode(0, 1));
     app.Start(Seconds(1.1));
     app.Stop(Seconds(10.0));
     Ptr<CsmaNetDevice> sendingDevice = DynamicCast<CsmaNetDevice>(app.Get(0)->GetNode()->GetDevice(0));
@@ -135,7 +135,7 @@ main(int argc, char* argv[])
     if (verbose)
     {
         LogComponentEnable("ZonalLayoutHelper", LOG_LEVEL_ALL);
-        LogComponentEnable("ZonalLatencyMeasurement", LOG_LEVEL_ALL);
+        LogComponentEnable("IntraZoneSingleStreamLatency", LOG_LEVEL_ALL);
         LogComponentEnable("OnOffApplication", LOG_LEVEL_ALL);
         LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
         LogComponentEnable("Packet", LOG_LEVEL_ALL);

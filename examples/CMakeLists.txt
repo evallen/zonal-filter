@@ -1,9 +1,24 @@
+# inter-zone-single-stream-latency experiment
+
 set(example_source_files
-  zonal-latency-measurement.cc
+  inter-zone-single-stream-latency.cc
 )
 
 build_lib_example(
-    NAME zonal-latency-measurement
+    NAME inter-zone-single-stream-latency
+    SOURCE_FILES ${example_source_files}
+    LIBRARIES_TO_LINK ${libzonal-research}
+)
+
+
+# intra-zone-single-stream experiment
+
+set(example_source_files
+  intra-zone-single-stream-latency.cc
+)
+
+build_lib_example(
+    NAME intra-zone-single-stream-latency
     SOURCE_FILES ${example_source_files}
     LIBRARIES_TO_LINK ${libzonal-research}
 )
