@@ -1,62 +1,12 @@
-/* 
- * mysimulation.cc
- *
- * A basic model of the ZIA network for simulation.
- *
- */
-
 /**
  * \file 
  * \ingroup zonal-research
  *
  * Implementation for the ZonalLatencyMeasurement simulation.
  *
- * Network topology: 
- *  One or more zones with one or more endpoints each
- *  connected to a zonal gateway in a tree-like structure.
- *
- *  
- *
- * For example, a zonal network with topology = {2, 3}
- *  (two zones, one with 2 endpoints and one with 3) would look
- *  like this:
- *
- *         ZONE ONE                       |                ZONE TWO
- *                                        |
- *    n1.1 ----|                          |                          |---- n2.1
- *             |                                                     |
- *            n1.0 == n1.M ===== n1.N == nGW == n2.N ===== n2.M -- n2.0 -- n2.2
- *             |                                                     |
- *    n1.2 ----|                          |                          |---- n2.3
- *
- *    where nodes are represented as:
- *      nGW     - is the gateway
- *      n1.*    - is the zone-one nodes (n1.1)
- *      n2.*    - is the zone-two nodes (n2.1)
- *      n*.M    - is the MACsec transceiver for a zonal controller (n1.M)
- *      n*.N    - is the MACsec transceiver for the gateway on a given zone (n1.N) (NOTE*)
- *      n*.0    - is the zonal controller for a zone (n1.0)
- *
- *    and where connections are respresented as:
- *      ---     - 100Mbps Automotive Ethernet
- *      ===     - 1000Mbps Automotive Ethernet
- *
- *    Depending on the topology specified in the header file,
- *    the simulation could have more zones with different numbers
- *    of endpoints, etc.
- *
- *    NOTE*: 
- *      Currently, we simulate our network with a MACsec transceiver on each side
- *      of each 1000Mbps backbone connection (i.e., an inter-zonal message gets encrypted
- *      when leaving a zonal controller, decrypted when entering the gateway, encrypted
- *      when leaving the gateway, and then decrypted again when entering a zonal
- *      controller). 
- *
- *      It is possible that we could implement the MACsec transceivers so that 
- *      we only have one per zone (such as one on each ZC, and allow the messsages
- *      to go through the GW encrypted). 
- *
- *      This should be the topic of a future simulation.
+ * Uses a basic ZonalLayoutHelper layout and the default settings.
+ * Simulates just a single stream of traffic from one node to one
+ * in another zone.
  */
 
 #include "ns3/applications-module.h"
@@ -66,7 +16,8 @@
 #include "ns3/network-module.h"
 #include "ns3/bridge-module.h"
 
-#include "zonal-latency-measurement.h"
+#include "ns3/zonal-research-module.h"
+#include "ns3/zonal-layout-helper.h"
 #include "ns3/processing-bridge-helper.h"
 #include "ns3/processing-bridge-net-device.h"
 #include "ns3/stream-latency-trace-helper.h"
@@ -75,16 +26,81 @@
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <istream>
 #include <ostream>
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("ZonalNetwork");
+NS_LOG_COMPONENT_DEFINE("ZonalLatencyMeasurement");
 
 
 // === Parameters =================================================================
 
-bool verbose = false;
+bool verbose = false; //!< Set by CLI argument
+
+ZonalLayoutConfiguration
+GetConfig()
+{
+    ZonalLayoutConfiguration config;
+
+    config.title = "zonal-latency-measurement";
+
+    config.propagationDelay = Time("2ns");
+
+    config.endpointDataRate = DataRate("100Mbps");
+    config.backboneDataRate = DataRate("1000Mbps");
+
+    config.zonalControllerProcessingSpeed = DataRate("1000Mbps");
+    config.zonalControllerInputQueueSize = QueueSize("100p");
+    config.zonalControllerProcessingDelay = Time("30ns");
+
+    config.macsecTrxProcessingSpeed = DataRate("1000Mbps");
+    config.macsecTrxInputQueueSize = QueueSize("100p");
+    config.macsecTrxProcessingDelay = 
+        LatencyCallback(MakeCallback(ZonalLayoutHelper::ComputePenaMacSecLatency));
+
+    config.zoneCounts = {6, 3, 8, 6};
+
+    return config;
+}
+
+
+// === Setup Helpers ==============================================================
+
+/**
+ * Create a single UDP stream that we track. 
+ *
+ * Sends from 10.
+ */
+void
+CreateApplications(ZonalLayoutHelper & zonal)
+{
+    NS_LOG_FUNCTION_NOARGS();
+
+    uint16_t port = 9; // Discard port (RFC 863)
+
+    ApplicationContainer app;
+
+    // Create the sender (zone 1, node 1: 10.1.2.3)
+    OnOffHelper onoff("ns3::UdpSocketFactory",
+                      Address(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
+    onoff.SetConstantRate(DataRate("500kb/s"));
+
+    app = onoff.Install(zonal.GetNode(1, 1));
+    app.Start(Seconds(1.1));
+    app.Stop(Seconds(10.0));
+    Ptr<CsmaNetDevice> sendingDevice = DynamicCast<CsmaNetDevice>(app.Get(0)->GetNode()->GetDevice(0));
+
+    // Create the receiver (zone 0, node 0: 10.1.1.2)
+    PacketSinkHelper sink("ns3::UdpSocketFactory",
+                          Address(InetSocketAddress(Ipv4Address::GetAny(), port)));
+    app = sink.Install(zonal.GetNode(0, 0));
+    app.Start(Seconds(0.0));
+    Ptr<PacketSink> receivingApp = DynamicCast<PacketSink>(app.Get(0));
+
+    StreamLatencyTraceHelper::Install(sendingDevice, receivingApp, "stream.csv");
+}
+
 
 // === Command Line Callbacks =====================================================
 
@@ -94,8 +110,6 @@ SetVerbose(const std::string& value)
     verbose = true;
     return true;
 }
-
-// === Setup Helpers ==============================================================
 
 void
 ParseCommandLine(int argc, char *argv[])
@@ -107,413 +121,31 @@ ParseCommandLine(int argc, char *argv[])
     cmd.Parse(argc, argv);
 }
 
-ZonalLatencyMeasurement::ZonalLatencyMeasurement(bool verbose) :
-    verbose(verbose)
-{
-    zoneSwitchDevices = std::vector<NetDeviceContainer>(NumZones());
-    zoneSwitchMacSecTrxDevices = std::vector<NetDeviceContainer>(NumZones());
-    zoneGwMacSecTrxDevices = std::vector<NetDeviceContainer>(NumZones());
-    zoneTerminalDevices = std::vector<NetDeviceContainer>(NumZones());
-
-    zoneIpDevices = std::vector<NetDeviceContainer>(NumZones());
-    zoneIpInterfaces = std::vector<Ipv4InterfaceContainer>(NumZones());
-
-    zoneSwitches = std::vector<NodeContainer>(NumZones());
-    zoneSwitchMacSecTrxs = std::vector<NodeContainer>(NumZones());
-    zoneGwMacSecTrxs = std::vector<NodeContainer>(NumZones());
-    zoneTerminals = std::vector<NodeContainer>(NumZones());
-}
-
-void 
-PrintTerminal(Ptr<Node> node, int zone, int term, std::ofstream & out)
-{
-    out << "\tNode " << node->GetId() << ": Zone " << zone << "; Term " << term << "; IP " << 
-                 node->GetObject<Ipv4>()->GetAddress(1,0).GetLocal() << "\n";
-}
-
-void
-PrintSwitch(Ptr<Node> node, int zone, std::ofstream & out)
-{
-    out << "\tNode " << node->GetId() << ": Zone " << zone << "; SWITCH" << "\n";
-}
-
-void
-PrintMacSecTrx(Ptr<Node> node, int zone, bool switchSide, std::ofstream & out)
-{
-    std::string suffix = switchSide ? "SWITCH-SIDE" : "GATEWAY-SIDE";
-    out << "\tNode " << node->GetId() << ": Zone " << zone << "; " << suffix << "\n";
-}
-
-void
-PrintGateway(Ptr<Node> node, std::ofstream & out)
-{
-    Ptr<Ipv4> ip4 = node->GetObject<Ipv4>();
-    out << "Node " << node->GetId() << "\n";
-
-    int nInterfaces = ip4->GetNInterfaces();
-    for (int i = 0; i < nInterfaces; i++) {
-        out << "\tIP " << ip4->GetAddress(i, 0).GetLocal() << "\n";
-    }
-}
-
-void
-ZonalLatencyMeasurement::PrintNodeInfo()
-{
-    NS_LOG_FUNCTION(this);
-
-    std::ofstream out("zonal-latency-measurement.ips");
-
-    out << "GATEWAY" << "\n";
-    PrintGateway(gateway.Get(0), out);
-
-    for (int i = 0; i < NumZones(); i++) {
-        int numTerminals = zoneTerminals[i].GetN();
-
-        out << "ZONE " << i << "\n";
-        out << "\tSWITCH" << "\n";
-        PrintSwitch(zoneSwitches[i].Get(0), i, out);
-
-        out << "\tMACSEC TRX" << "\n";
-        PrintMacSecTrx(zoneSwitchMacSecTrxs[i].Get(0), i, true, out);
-        PrintMacSecTrx(zoneGwMacSecTrxs[i].Get(0), i, false, out);
-
-        out << "\tTERMINALS" << "\n";
-        for (int j = 0; j < numTerminals; j++) {
-            Ptr<Node> node = zoneTerminals[i].Get(j);
-            PrintTerminal(node, i, j, out);
-        }
-    }
-}
-
-void
-ZonalLatencyMeasurement::Setup()
-{
-    NS_LOG_FUNCTION(this);
-
-    CreateNodes();
-    BuildTopology();
-    AssignIpAddresses();
-    CreateApplications();
-    ConfigureTracing();
-    PrintNodeInfo();
-}
-
-int 
-ZonalLatencyMeasurement::NumZones()
-{
-    return zone_counts.size();
-}
-
-void
-ZonalLatencyMeasurement::CreateNodes()
-{
-    NS_LOG_FUNCTION(this);
-    
-    gateway.Create(1);
-
-    for (int zone = 0; zone < NumZones(); zone++) {
-        zoneTerminals[zone].Create(zone_counts[zone]);
-        zoneSwitches[zone].Create(1);
-        zoneSwitchMacSecTrxs[zone].Create(1);
-        zoneGwMacSecTrxs[zone].Create(1);
-    }
-}
-
-void
-ZonalLatencyMeasurement::BuildZoneTopos()
-{
-    NS_LOG_FUNCTION(this);
-
-    csmaHelper.SetChannelAttribute("Delay", TimeValue(PROPAGATION_DELAY));
-    csmaHelper.SetChannelAttribute("DataRate", DataRateValue(DATARATE_100BASET));
-
-    // Create p2p links from each terminal to their zonal switch
-    for (int zone = 0; zone < NumZones(); zone++) {
-        for (int terminal = 0; terminal < zone_counts[zone]; terminal++) {
-            NetDeviceContainer link = csmaHelper.Install(
-                NodeContainer(
-                    zoneTerminals[zone].Get(terminal), zoneSwitches[zone]
-                )
-            );
-            zoneTerminalDevices[zone].Add(link.Get(0));
-            zoneSwitchDevices[zone].Add(link.Get(1));
-        }
-    }
-
-    // Add internet stack to the terminals
-    InternetStackHelper internet;
-    for (auto & terminals : zoneTerminals) {
-        internet.Install(terminals);
-    }
-}
-
-void
-ZonalLatencyMeasurement::BuildBackboneTopo()
-{
-    NS_LOG_FUNCTION(this);
-
-    csmaHelper.SetChannelAttribute("Delay", TimeValue(PROPAGATION_DELAY));
-    csmaHelper.SetChannelAttribute("DataRate", DataRateValue(DATARATE_1000BASET));
-
-    // Create links
-    for (int zone = 0; zone < NumZones(); zone++) {
-        // Zonal switch to switch MacSec transceiver
-        NetDeviceContainer switch_macsec_link = csmaHelper.Install(
-            NodeContainer(
-                zoneSwitches[zone], zoneSwitchMacSecTrxs[zone]
-            )
-        );
-        zoneSwitchDevices[zone].Add(switch_macsec_link.Get(0));
-        zoneSwitchMacSecTrxDevices[zone].Add(switch_macsec_link.Get(1));
-
-        // Switch MacSec transceiver to gateway MacSec transceiver
-        NetDeviceContainer inter_macsec_link = csmaHelper.Install(
-            NodeContainer(
-                zoneSwitchMacSecTrxs[zone], zoneGwMacSecTrxs[zone]
-            )
-        );
-        zoneSwitchMacSecTrxDevices[zone].Add(inter_macsec_link.Get(0));
-        zoneGwMacSecTrxDevices[zone].Add(inter_macsec_link.Get(1));
-
-        // Gateway MacSec transceiver to gateway
-        NetDeviceContainer macsec_gw_link = csmaHelper.Install(
-            NodeContainer(
-                zoneGwMacSecTrxs[zone], gateway
-            )
-        );
-        zoneGwMacSecTrxDevices[zone].Add(macsec_gw_link.Get(0));
-        gatewayDevices.Add(macsec_gw_link.Get(1));
-    }
-
-    // Add internet stack to the gateway
-    InternetStackHelper internet;
-    internet.Install(gateway);
-}
-
-void
-ZonalLatencyMeasurement::BuildSwitches()
-{
-    // Create the switch netdevices, which will do the packet switching
-    // Also create the MacSecTrxs
-    for (int zone = 0; zone < NumZones(); zone++) {
-        Ptr<Node> switchNode = zoneSwitches[zone].Get(0);
-        BuildZonalSwitch(switchNode, zoneSwitchDevices[zone]);
-
-        // MacSecTrxs
-        Ptr<Node> switchMacSecTrx = zoneSwitchMacSecTrxs[zone].Get(0);
-        Ptr<Node> gwMacSecTrx = zoneGwMacSecTrxs[zone].Get(0);
-
-        BuildMacSecTrx(switchMacSecTrx, zoneSwitchMacSecTrxDevices[zone]);
-        BuildMacSecTrx(gwMacSecTrx, zoneGwMacSecTrxDevices[zone]);
-    }
-}
-
-void
-ZonalLatencyMeasurement::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
-{
-    ProcessingBridgeHelper pBridge;
-    pBridge.SetDeviceAttribute("ProcessingDelay", 
-                               CallbackValue(ProcessingBridgeNetDevice::LatencyCallback(
-                                    [] (uint32_t size) { return ZONAL_CONTROLLER_PROCESSING_DELAY; }
-                               )));
-    pBridge.SetDeviceAttribute("Throughput",
-                               DataRateValue(ZONAL_CONTROLLER_PROCESSING_SPEED));
-    pBridge.SetDeviceAttribute("QueueSize",
-                               QueueSizeValue(ZONAL_CONTROLLER_INPUT_QUEUE_SIZE));
-
-    pBridge.Install(switchNode, switchDevices);
-}
-
-Time 
-ComputePenaMacSecLatency(uint32_t packet_size_bytes) {
-    // Equation acquired from doing linear regression on Pena et al.
-    // latency data in paper
-    //
-    // Divide by two because their data includes encryption & decryption, whereas
-    // we only want to know how long it takes to do one of those things.
-    return NanoSeconds(((uint64_t)packet_size_bytes * 32 + 6579) / 2);
-}
-
-void
-ZonalLatencyMeasurement::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices)
-{
-    ProcessingBridgeHelper macSecTrx;
-    macSecTrx.SetDeviceAttribute("ProcessingDelay",
-                                 CallbackValue(ProcessingBridgeNetDevice::LatencyCallback(
-                                    ComputePenaMacSecLatency
-                                 )));
-    macSecTrx.SetDeviceAttribute("Throughput",
-                               DataRateValue(MACSEC_TRX_PROCESSING_SPEED));
-    macSecTrx.SetDeviceAttribute("QueueSize",
-                               QueueSizeValue(MACSEC_TRX_INPUT_QUEUE_SIZE));
-    macSecTrx.Install(trxNode, switchDevices);
-}
-
-void
-ZonalLatencyMeasurement::BuildBridgeSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
-{
-    // NS_LOG_FUNCTION(this << switchNode << switchDevices);
-    
-    BridgeHelper bridge;
-
-    bridge.Install(switchNode, switchDevices);
-}
-
-#ifdef NS3_OPENFLOW
-void
-MySimulation::BuildOpenFlowSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices)
-{
-    // NS_LOG_FUNCTION(this << switchNode << switchDevices);
-
-    OpenFlowSwitchHelper swtch;
-
-    if (use_drop)
-    {
-        Ptr<ns3::ofi::DropController> controller = CreateObject<ns3::ofi::DropController>();
-        swtch.Install(switchNode, switchDevices, controller);
-    }
-    else
-    {
-        Ptr<ns3::ofi::LearningController> controller = CreateObject<ns3::ofi::LearningController>();
-        if (!timeout.IsZero())
-        {
-            controller->SetAttribute("ExpirationTime", TimeValue(timeout));
-        }
-        swtch.Install(switchNode, switchDevices, controller);
-    }
-}
-#endif
-
-void
-ZonalLatencyMeasurement::BuildTopology()
-{
-    NS_LOG_FUNCTION(this);
-
-    BuildZoneTopos();
-    BuildBackboneTopo();
-    BuildSwitches();
-}
-
-void
-ZonalLatencyMeasurement::AssignIpAddresses()
-{
-    NS_LOG_FUNCTION(this);
-
-    // All zonal networks will be in the format
-    //  10.1.X.0, 
-    // where X starts at 1 and increases.
-    constexpr int subnet_base_num = 1;
-    Ipv4AddressHelper ipv4;
-
-    for (int zone = 0; zone < NumZones(); zone++) {
-        int subnet_num = zone + subnet_base_num;
-
-        zoneIpDevices[zone].Add(gatewayDevices.Get(zone));
-        zoneIpDevices[zone].Add(zoneTerminalDevices[zone]);
-
-        // Create 10.1.X.0 network string
-        std::ostringstream network;
-        network << "10.1." << subnet_num << ".0";
-        std::string network_str = network.str();
-
-        ipv4.SetBase(network_str.c_str(), "255.255.255.0");
-        zoneIpInterfaces[zone] = ipv4.Assign(zoneIpDevices[zone]);
-    }
-
-    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
-    Ptr<OutputStreamWrapper> routingStream = Create<OutputStreamWrapper>("mysimulation.routes", std::ios::out);
-    Ipv4GlobalRoutingHelper::PrintRoutingTableAllAt(Seconds(0.5), routingStream);
-}
-
-void
-ZonalLatencyMeasurement::CreateApplications()
-{
-    NS_LOG_FUNCTION(this);
-
-    uint16_t port = 9; // Discard port (RFC 863)
-
-    OnOffHelper onoff("ns3::UdpSocketFactory",
-                      Address(InetSocketAddress(Ipv4Address("10.1.1.3"), port)));
-    onoff.SetConstantRate(DataRate("500kb/s"));
-
-    ApplicationContainer app;
-    // ApplicationContainer app = onoff.Install(zoneTerminals[0].Get(0));
-    // // Start the application
-    // app.Start(Seconds(1.0));
-    // app.Stop(Seconds(10.0));
-
-    // Create an optional packet sink to receive these packets
-    PacketSinkHelper sink("ns3::UdpSocketFactory",
-                          Address(InetSocketAddress(Ipv4Address::GetAny(), port)));
-    // app = sink.Install(zoneTerminals[0].Get(1));
-    // app.Start(Seconds(0.0));
-
-    //
-    // Create a similar flow from n3 to n0, starting at time 1.1 seconds
-    //
-    onoff.SetAttribute("Remote", AddressValue(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
-    app = onoff.Install(zoneTerminals[1].Get(1));
-    app.Start(Seconds(1.1));
-    app.Stop(Seconds(10.0));
-    Ptr<CsmaNetDevice> sendingDevice = DynamicCast<CsmaNetDevice>(app.Get(0)->GetNode()->GetDevice(0));
-
-    app = sink.Install(zoneTerminals[0].Get(0));
-    app.Start(Seconds(0.0));
-    Ptr<PacketSink> receivingApp = DynamicCast<PacketSink>(app.Get(0));
-
-    StreamLatencyTraceHelper::Install(sendingDevice, receivingApp, "stream.csv");
-}
-
-void
-ZonalLatencyMeasurement::ConfigureTracing()
-{
-    NS_LOG_FUNCTION(this);
-
-    //
-    // Configure tracing of all enqueue, dequeue, and NetDevice receive events.
-    // Trace output will be sent to the file "openflow-switch.tr"
-    //
-    AsciiTraceHelper ascii;
-    csmaHelper.EnableAsciiAll(ascii.CreateFileStream("zonal-latency-measurement.tr"));
-
-    //
-    // Also configure some tcpdump traces; each interface will be traced.
-    // The output files will be named:
-    //     openflow-switch-<nodeId>-<interfaceId>.pcap
-    // and can be read by the "tcpdump -r" command (use "-tt" option to
-    // display timestamps correctly)
-    //
-    csmaHelper.EnablePcapAll("zonal-latency-measurement", true);
-
-
-}
-
 
 // === Main =======================================================================
 
 int
 main(int argc, char* argv[])
 {
-    //
-    // Allow the user to override any of the defaults and the above Bind() at
-    // run-time, via command-line arguments
-    //
     ParseCommandLine(argc, argv);
-    ZonalLatencyMeasurement sim(verbose);
+
+    ZonalLayoutConfiguration config {GetConfig()};
+    ZonalLayoutHelper zonal(config);
 
     if (verbose)
     {
-        LogComponentEnable("ZonalNetwork", LOG_LEVEL_ALL);
+        LogComponentEnable("ZonalLayoutHelper", LOG_LEVEL_ALL);
+        LogComponentEnable("ZonalLatencyMeasurement", LOG_LEVEL_ALL);
         LogComponentEnable("OnOffApplication", LOG_LEVEL_ALL);
         LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
         LogComponentEnable("Packet", LOG_LEVEL_ALL);
-        // LogComponentEnable("OpenFlowInterface", LOG_LEVEL_INFO);
-        // LogComponentEnable("OpenFlowSwitchNetDevice", LOG_LEVEL_INFO);
     }
 
     Packet::EnablePrinting();
     Packet::EnableChecking();
-    sim.Setup();
+    zonal.Setup();
+
+    CreateApplications(zonal);
 
     NS_LOG_INFO("Run Simulation.");
     Simulator::Run();
