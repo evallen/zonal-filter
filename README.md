@@ -55,19 +55,19 @@ Depending on the topology specified in the header file,
 the simulation could have more zones with different numbers
 of endpoints, etc.
 
-_NOTE * : 
-   Currently, we simulate our network with a MACsec transceiver on each side
+> NOTE * :
+>  Currently, we simulate our network with a MACsec transceiver on each side
    of each backbone connection (i.e., an inter-zonal message gets encrypted
    when leaving a zonal controller, decrypted when entering the gateway, encrypted
    when leaving the gateway, and then decrypted again when entering a zonal
-   controller). 
-
-   It is possible that we could implement the MACsec transceivers so that 
+   controller).
+>
+>  It is possible that we could implement the MACsec transceivers so that 
    we only have one per zone (such as one on each ZC, and allow the messsages
-   to go through the GW encrypted). 
-
-   This should be the topic of a future simulation, potentially implemented 
-   with a switch in the configuration._
+   to go through the GW encrypted).
+>
+>  This should be the topic of a future simulation, potentially implemented 
+   with a switch in the configuration.
 
 ## Installation
 
