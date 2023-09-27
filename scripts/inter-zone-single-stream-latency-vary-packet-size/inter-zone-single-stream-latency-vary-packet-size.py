@@ -12,7 +12,7 @@ import subprocess
 from tqdm import tqdm
 
 ZONAL_DIRECTORY = "contrib/zonal-research"
-DEFAULT_OUTPUT_DIRECTORY = f"{ZONAL_DIRECTORY}/results/inter-zone-single-stream-latency-vary-packet-size/secure"
+DEFAULT_OUTPUT_DIRECTORY = f"{ZONAL_DIRECTORY}/results/inter-zone-single-stream-latency/packet-size/secure"
 SINGLE_TEST_SCRIPT_PATH = f"{ZONAL_DIRECTORY}/examples/inter-zone-single-stream-latency.cc"
 
 PACKET_SIZES = [64, 128, 256, 512, 1024, 1280, 1518]
