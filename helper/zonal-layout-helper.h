@@ -113,6 +113,9 @@ struct ZonalLayoutConfiguration
 
     /** Actual zone topoology for the simulation. */
     Topology zoneCounts;
+
+    /** Whether or not to do detailed PCAP / ASCII tracing. */
+    bool tracing;
 };
 
 

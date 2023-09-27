@@ -28,6 +28,7 @@
 #include <iostream>
 #include <istream>
 #include <ostream>
+#include <string>
 
 using namespace ns3;
 
@@ -37,6 +38,7 @@ NS_LOG_COMPONENT_DEFINE("InterZoneSingleStreamLatency");
 // === Parameters =================================================================
 
 bool verbose = false; //!< Set by CLI argument
+uint32_t packetSize = 512; //!< Set by CLI argument
 
 ZonalLayoutConfiguration
 GetConfig()
@@ -61,6 +63,8 @@ GetConfig()
 
     config.zoneCounts = {6, 3, 8, 6};
 
+    config.tracing = false;
+
     return config;
 }
 
@@ -84,7 +88,7 @@ CreateApplications(ZonalLayoutHelper & zonal)
     // Create the sender (zone 1, node 1: 10.1.2.3)
     OnOffHelper onoff("ns3::UdpSocketFactory",
                       Address(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
-    onoff.SetConstantRate(DataRate("500kb/s"));
+    onoff.SetConstantRate(DataRate("500kb/s"), packetSize);
 
     app = onoff.Install(zonal.GetNode(1, 1));
     app.Start(Seconds(1.1));
@@ -118,18 +122,16 @@ ParseCommandLine(int argc, char *argv[])
     CommandLine cmd(__FILE__);
     cmd.AddValue("v", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
     cmd.AddValue("verbose", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
+    cmd.AddValue("packet-size", "Size of packets in bytes", packetSize);
     cmd.Parse(argc, argv);
 }
 
 
-// === Main =======================================================================
+// === Runner =====================================================================
 
-int
-main(int argc, char* argv[])
+void
+RunTrial(ZonalLayoutConfiguration config)
 {
-    ParseCommandLine(argc, argv);
-
-    ZonalLayoutConfiguration config {GetConfig()};
     ZonalLayoutHelper zonal(config);
 
     if (verbose)
@@ -141,6 +143,7 @@ main(int argc, char* argv[])
         LogComponentEnable("Packet", LOG_LEVEL_ALL);
     }
 
+
     Packet::EnablePrinting();
     Packet::EnableChecking();
     zonal.Setup();
@@ -151,6 +154,18 @@ main(int argc, char* argv[])
     Simulator::Run();
     Simulator::Destroy();
     NS_LOG_INFO("Done.");
+}
+
+
+// === Main =======================================================================
+
+int
+main(int argc, char* argv[])
+{
+    ParseCommandLine(argc, argv);
+
+    ZonalLayoutConfiguration config {GetConfig()};
+    RunTrial(config);
 
     return 0;
 }

@@ -116,7 +116,10 @@ ZonalLayoutHelper::Setup()
     CreateNodes();
     BuildTopology();
     AssignIpAddresses();
-    ConfigureTracing();
+    if (config.tracing) 
+    {
+        ConfigureTracing();
+    }
     PrintNodeInfo();
 }
 
