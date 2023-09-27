@@ -19,6 +19,13 @@ For more detail, please see the source code documentation in each file.
 For example, see information on the first latency experiment 
 [here](examples/zonal-latency-measurement.cc).
 
+## Current Experiments
+
+| Experiment Name | Main Result File | Description |
+|-----------------|------------------|-------------|
+|[`inter-zone-single-stream-latency`](examples/inter-zone-single-stream-latency.cc)|[`stream.csv`](results/inter-zone-single-stream-latency/stream.csv)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _another_ zone.|
+|[`intra-zone-single-stream-latency`](examples/intra-zone-single-stream-latency.cc)|[`stream.csv`](results/intra-zone-single-stream-latency/stream.csv)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _same_ zone.|
+
 ## Basic Zonal Topology
 
 **Network topology:**
