@@ -7,24 +7,27 @@ Evaluation and development repository for research into performant authenticatio
 This repository is a single module designed for use within the [ns-3](https://www.nsnam.org/)
 network simulator.
 
-Experiments can each be found in the [`examples/`](examples/) directory with supporting code 
+Experiments can each be found in the [`scripts/`](scripts/) directory.
+Each experiment relies on a `.cc` runner file in [`examples/`](examples/) directory with supporting code 
 in the [`helper/`](helper/) and [`model/`](model/) directories.
 
-Results can be found in the [`results/`](results/) directory for each experiment.
+Processed results can be found in the `scripts/<experiment>/analyze.ipynb` 
+notebooks.
+Raw results can be found in the [`results/`](results/) directory for each
+experiment.
 For example, you can view the results of the first Zonal Latency Measurement
-experiment by viewing 
-[`results/zonal-latency-measurement/stream.csv`](results/zonal-latency-measurement/stream.csv).
-
-For more detail, please see the source code documentation in each file.
-For example, see information on the first latency experiment 
-[here](examples/zonal-latency-measurement.cc).
+experiment by viewing [here](scripts/inter-zone-single-stream-latency-vary-packet-size/analyze.ipynb).
 
 ## Current Experiments
 
 | Experiment Name | Main Result File | Description |
 |-----------------|------------------|-------------|
-|[`inter-zone-single-stream-latency`](examples/inter-zone-single-stream-latency.cc)|[`stream.csv`](results/inter-zone-single-stream-latency/stream.csv)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _another_ zone.|
-|[`intra-zone-single-stream-latency`](examples/intra-zone-single-stream-latency.cc)|[`stream.csv`](results/intra-zone-single-stream-latency/stream.csv)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _same_ zone.|
+|[`inter-zone-single-stream-latency-vary-packet-size`](scripts/inter-zone-single-stream-latency-vary-packet-size/measure.py)|[`analyze.ipynb`](scripts/inter-zone-single-stream-latency-vary-packet-size/analyze.ipynb)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _another_ zone.|
+|[`intra-zone-single-stream-latency-vary-packet-size`](scripts/intra-zone-single-stream-latency-vary-packet-size/measure.py)|[`analyze.ipynb`](scripts/intra-zone-single-stream-latency-vary-packet-size/analyze.ipynb)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _same_ zone.|
+
+![Latency vs. packet size for an inter-zonal stream.](results/inter-zone-single-stream-latency/packet-size/graph.png)
+
+_An example result from `inter-zone-single-stream-latency-vary-paket-size`._
 
 ## Basic Zonal Topology
 
@@ -79,11 +82,13 @@ of endpoints, etc.
 ## Installation
 
 To install this repository, please install the [ns-3](https://www.nsnam.org/) 
-network simulator from Git first, and then clone this repository in the
+network simulator from our 
+[Gitlab fork*](https://gitlab.com/evallen1/ns-3-dev.git) first, 
+and then clone this repository in the
 `contrib/` directory of `ns-3` to install it as a module:
 
 ```bash
-git clone https://github.com/nsnam/ns-3-dev-git ns-3
+git clone https://gitlab.com/evallen1/ns-3-dev.git ns-3
 git clone https://github.com/evallen/zonal-filter ns-3/contrib/zonal-research
 ```
 
@@ -102,3 +107,7 @@ Then build and run the experiments in this directory, such as
 ./ns3 run 'contrib/zonal-research/examples/zonal-latency-measurement.cc --verbose' \
   --cwd contrib/zonal-research/results/my-test/
 ```
+
+**We use our own fork of `ns-3` because we need to make certain functions
+`virtual` so that we can override them in our implementation of the 
+zonal network. This is not possible without modifying `ns-3`.*
