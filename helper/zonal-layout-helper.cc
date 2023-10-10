@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE("ZonalLayoutHelper");
 
 // === Setup Helpers ==============================================================
 
-ZonalLayoutHelper::ZonalLayoutHelper(ZonalLayoutConfiguration config) :
+ZonalLayoutHelper::ZonalLayoutHelper(ZonalLayoutConfigurationV1 config) :
     config(config)
 {
     zoneSwitchDevices = std::vector<NetDeviceContainer>(NumZones());
@@ -96,9 +96,12 @@ ZonalLayoutHelper::PrintNodeInfo() const
         out << "\tSWITCH" << "\n";
         PrintSwitch(zoneSwitches[i].Get(0), i, out);
 
-        out << "\tMACSEC TRX" << "\n";
-        PrintMacSecTrx(zoneSwitchMacSecTrxs[i].Get(0), i, true, out);
-        PrintMacSecTrx(zoneGwMacSecTrxs[i].Get(0), i, false, out);
+        if (config.includeSecurityAdditions)
+        {
+            out << "\tMACSEC TRX" << "\n";
+            PrintMacSecTrx(zoneSwitchMacSecTrxs[i].Get(0), i, true, out);
+            PrintMacSecTrx(zoneGwMacSecTrxs[i].Get(0), i, false, out);
+        }
 
         out << "\tTERMINALS" << "\n";
         for (int j = 0; j < numTerminals; j++) {
@@ -142,11 +145,16 @@ ZonalLayoutHelper::CreateNodes()
     
     gateway.Create(1);
 
-    for (int zone = 0; zone < NumZones(); zone++) {
+    for (int zone = 0; zone < NumZones(); zone++) 
+    {
         zoneTerminals[zone].Create(config.zoneCounts[zone]);
         zoneSwitches[zone].Create(1);
-        zoneSwitchMacSecTrxs[zone].Create(1);
-        zoneGwMacSecTrxs[zone].Create(1);
+
+        if (config.includeSecurityAdditions) 
+        {
+            zoneSwitchMacSecTrxs[zone].Create(1);
+            zoneGwMacSecTrxs[zone].Create(1);
+        }
     }
 }
 
@@ -159,8 +167,10 @@ ZonalLayoutHelper::BuildZoneTopos()
     csmaHelper.SetChannelAttribute("DataRate", DataRateValue(config.endpointDataRate));
 
     // Create p2p links from each terminal to their zonal switch
-    for (int zone = 0; zone < NumZones(); zone++) {
-        for (int terminal = 0; terminal < config.zoneCounts[zone]; terminal++) {
+    for (int zone = 0; zone < NumZones(); zone++) 
+    {
+        for (int terminal = 0; terminal < config.zoneCounts[zone]; terminal++) 
+        {
             NetDeviceContainer link = csmaHelper.Install(
                 NodeContainer(
                     zoneTerminals[zone].Get(terminal), zoneSwitches[zone]
@@ -173,9 +183,53 @@ ZonalLayoutHelper::BuildZoneTopos()
 
     // Add internet stack to the terminals
     InternetStackHelper internet;
-    for (auto & terminals : zoneTerminals) {
+    for (auto & terminals : zoneTerminals) 
+    {
         internet.Install(terminals);
     }
+}
+
+void
+ZonalLayoutHelper::BuildSwitchGatewayLinkSecure(int zone)
+{
+    // Zonal switch to switch MacSec transceiver
+    NetDeviceContainer switch_macsec_link = csmaHelper.Install(
+        NodeContainer(
+            zoneSwitches[zone], zoneSwitchMacSecTrxs[zone]
+        )
+    );
+    zoneSwitchDevices[zone].Add(switch_macsec_link.Get(0));
+    zoneSwitchMacSecTrxDevices[zone].Add(switch_macsec_link.Get(1));
+
+    // Switch MacSec transceiver to gateway MacSec transceiver
+    NetDeviceContainer inter_macsec_link = csmaHelper.Install(
+        NodeContainer(
+            zoneSwitchMacSecTrxs[zone], zoneGwMacSecTrxs[zone]
+        )
+    );
+    zoneSwitchMacSecTrxDevices[zone].Add(inter_macsec_link.Get(0));
+    zoneGwMacSecTrxDevices[zone].Add(inter_macsec_link.Get(1));
+
+    // Gateway MacSec transceiver to gateway
+    NetDeviceContainer macsec_gw_link = csmaHelper.Install(
+        NodeContainer(
+            zoneGwMacSecTrxs[zone], gateway
+        )
+    );
+    zoneGwMacSecTrxDevices[zone].Add(macsec_gw_link.Get(0));
+    gatewayDevices.Add(macsec_gw_link.Get(1));
+}
+
+void
+ZonalLayoutHelper::BuildSwitchGatewayLinkInsecure(int zone)
+{
+    NetDeviceContainer switch_gw_link = csmaHelper.Install(
+        NodeContainer(
+            zoneSwitches[zone], gateway
+        )
+    );
+    zoneSwitchDevices[zone].Add(switch_gw_link.Get(0));
+    gatewayDevices.Add(switch_gw_link.Get(1));
 }
 
 void
@@ -187,33 +241,16 @@ ZonalLayoutHelper::BuildBackboneTopo()
     csmaHelper.SetChannelAttribute("DataRate", DataRateValue(config.backboneDataRate));
 
     // Create links
-    for (int zone = 0; zone < NumZones(); zone++) {
-        // Zonal switch to switch MacSec transceiver
-        NetDeviceContainer switch_macsec_link = csmaHelper.Install(
-            NodeContainer(
-                zoneSwitches[zone], zoneSwitchMacSecTrxs[zone]
-            )
-        );
-        zoneSwitchDevices[zone].Add(switch_macsec_link.Get(0));
-        zoneSwitchMacSecTrxDevices[zone].Add(switch_macsec_link.Get(1));
-
-        // Switch MacSec transceiver to gateway MacSec transceiver
-        NetDeviceContainer inter_macsec_link = csmaHelper.Install(
-            NodeContainer(
-                zoneSwitchMacSecTrxs[zone], zoneGwMacSecTrxs[zone]
-            )
-        );
-        zoneSwitchMacSecTrxDevices[zone].Add(inter_macsec_link.Get(0));
-        zoneGwMacSecTrxDevices[zone].Add(inter_macsec_link.Get(1));
-
-        // Gateway MacSec transceiver to gateway
-        NetDeviceContainer macsec_gw_link = csmaHelper.Install(
-            NodeContainer(
-                zoneGwMacSecTrxs[zone], gateway
-            )
-        );
-        zoneGwMacSecTrxDevices[zone].Add(macsec_gw_link.Get(0));
-        gatewayDevices.Add(macsec_gw_link.Get(1));
+    for (int zone = 0; zone < NumZones(); zone++) 
+    {
+        if (config.includeSecurityAdditions) 
+        {
+            BuildSwitchGatewayLinkSecure(zone);
+        }
+        else 
+        {
+            BuildSwitchGatewayLinkInsecure(zone);
+        }
     }
 
     // Add internet stack to the gateway
@@ -230,12 +267,15 @@ ZonalLayoutHelper::BuildSwitches()
         Ptr<Node> switchNode = zoneSwitches[zone].Get(0);
         BuildZonalSwitch(switchNode, zoneSwitchDevices[zone]);
 
-        // MacSecTrxs
-        Ptr<Node> switchMacSecTrx = zoneSwitchMacSecTrxs[zone].Get(0);
-        Ptr<Node> gwMacSecTrx = zoneGwMacSecTrxs[zone].Get(0);
+        if (config.includeSecurityAdditions) 
+        {
+            // MacSecTrxs
+            Ptr<Node> switchMacSecTrx = zoneSwitchMacSecTrxs[zone].Get(0);
+            Ptr<Node> gwMacSecTrx = zoneGwMacSecTrxs[zone].Get(0);
 
-        BuildMacSecTrx(switchMacSecTrx, zoneSwitchMacSecTrxDevices[zone]);
-        BuildMacSecTrx(gwMacSecTrx, zoneGwMacSecTrxDevices[zone]);
+            BuildMacSecTrx(switchMacSecTrx, zoneSwitchMacSecTrxDevices[zone]);
+            BuildMacSecTrx(gwMacSecTrx, zoneGwMacSecTrxDevices[zone]);
+        }
     }
 }
 
@@ -243,7 +283,15 @@ void
 ZonalLayoutHelper::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices) const
 {
     ProcessingBridgeHelper pBridge;
-    Time processingDelay = config.zonalControllerProcessingDelay;
+    Time processingDelay;
+    if (config.includeSecurityAdditions) 
+    {
+        processingDelay = config.zonalControllerProcessingDelay;
+    }
+    else 
+    {
+        processingDelay = Time(0);
+    }
     pBridge.SetDeviceAttribute("ProcessingDelay", 
                                CallbackValue(ProcessingBridgeNetDevice::LatencyCallback(
                                     [=] (uint32_t size) { return processingDelay; }
@@ -263,6 +311,7 @@ ZonalLayoutHelper::ComputePenaMacSecLatency(uint32_t packet_size_bytes) {
     //
     // Divide by two because their data includes encryption & decryption, whereas
     // we only want to know how long it takes to do one of those things.
+    NS_LOG_FUNCTION(packet_size_bytes);
     return NanoSeconds(((uint64_t)packet_size_bytes * 32 + 6579) / 2);
 }
 

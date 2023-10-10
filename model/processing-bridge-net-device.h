@@ -36,10 +36,10 @@ public:
     uint16_t protocol;
 
     /** The source address that sent the packet. */
-    const Address& source;
+    const Address source;
 
     /** The destination address of the packet. */
-    const Address& destination;
+    const Address destination;
 
     /** The type of the packet. */
     NetDevice::PacketType packetType;
@@ -106,7 +106,7 @@ class ProcessingBridgeNetDevice : public BridgeNetDevice
                                uint16_t protocol,
                                const Address& source,
                                const Address& destination,
-                               PacketType packetType);
+                               PacketType packetType) override;
 
         /**
          * Computes the latency of a packet given its size in 

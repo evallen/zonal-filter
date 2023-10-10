@@ -117,10 +117,10 @@ ProcessingBridgeNetDevice::StartProcessingPacket(Ptr<NetDevice> incomingPort,
 
     m_queueStates[interface] = BUSY;
 
-    BridgeNetDevice::ReceiveFromDevice(incomingPort, packet, protocol, src, dst, packetType);
-
     // Schedule when packet leaves to simulate latency.
-    Simulator::Schedule(m_processingDelayCalculator(packet->GetSize()),
+    Time processingDelay = m_processingDelayCalculator(packet->GetSize());
+    NS_LOG_DEBUG("Processing bridge simulating processing delay of " << processingDelay);
+    Simulator::Schedule(processingDelay,
                         &ProcessingBridgeNetDevice::SuperReceiveFromDevice,
                         this,
                         incomingPort,

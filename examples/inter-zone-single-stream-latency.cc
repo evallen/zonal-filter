@@ -32,18 +32,25 @@
 
 using namespace ns3;
 
+// Used to control version of zonal layout configuration;
+// when the configuration schema changes, so does the underlying
+// typename. This forces us to update the configuration 
+// for this file each time we change the configuration schema.
+typedef ZonalLayoutConfigurationV1 ZonalLayoutConfiguration;
+
 NS_LOG_COMPONENT_DEFINE("InterZoneSingleStreamLatency");
 
 
 // === Parameters =================================================================
 
 bool verbose = false; //!< Set by CLI argument
+bool insecure = false; //!< Set by CLI argument
 uint32_t packetSize = 512; //!< Set by CLI argument
 
 ZonalLayoutConfiguration
 GetConfig()
 {
-    ZonalLayoutConfiguration config;
+    ZonalLayoutConfiguration config {};
 
     config.title = "inter-zone-single-stream-latency";
 
@@ -64,6 +71,7 @@ GetConfig()
     config.zoneCounts = {6, 3, 8, 6};
 
     config.tracing = false;
+    config.includeSecurityAdditions = !insecure;
 
     return config;
 }
@@ -123,6 +131,8 @@ ParseCommandLine(int argc, char *argv[])
     cmd.AddValue("v", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
     cmd.AddValue("verbose", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
     cmd.AddValue("packet-size", "Size of packets in bytes", packetSize);
+    cmd.AddValue("insecure", "Turns off security additions for a theoretically faster network"
+                             " baseline", insecure);
     cmd.Parse(argc, argv);
 }
 

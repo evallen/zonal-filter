@@ -31,12 +31,20 @@
 
 using namespace ns3;
 
+// Used to control version of zonal layout configuration;
+// when the configuration schema changes, so does the underlying
+// typename. This forces us to update the configuration 
+// for this file each time we change the configuration schema.
+typedef ZonalLayoutConfigurationV1 ZonalLayoutConfiguration;
+
 NS_LOG_COMPONENT_DEFINE("IntraZoneSingleStreamLatency");
 
 
 // === Parameters =================================================================
 
+bool insecure = false; //!< Set by CLI argument
 bool verbose = false; //!< Set by CLI argument
+uint32_t packetSize = 512; //!< Set by CLI argument
 
 ZonalLayoutConfiguration
 GetConfig()
@@ -61,6 +69,9 @@ GetConfig()
 
     config.zoneCounts = {6, 3, 8, 6};
 
+    config.tracing = false;
+    config.includeSecurityAdditions = !insecure;
+
     return config;
 }
 
@@ -84,7 +95,7 @@ CreateApplications(ZonalLayoutHelper & zonal)
     // Create the sender (zone 1, node 1: 10.1.1.3)
     OnOffHelper onoff("ns3::UdpSocketFactory",
                       Address(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
-    onoff.SetConstantRate(DataRate("500kb/s"));
+    onoff.SetConstantRate(DataRate("500kb/s"), packetSize);
 
     app = onoff.Install(zonal.GetNode(0, 1));
     app.Start(Seconds(1.1));
@@ -118,6 +129,9 @@ ParseCommandLine(int argc, char *argv[])
     CommandLine cmd(__FILE__);
     cmd.AddValue("v", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
     cmd.AddValue("verbose", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
+    cmd.AddValue("packet-size", "Size of packets in bytes", packetSize);
+    cmd.AddValue("insecure", "Turns off security additions for a theoretically faster network"
+                             " baseline", insecure);
     cmd.Parse(argc, argv);
 }
 
@@ -136,9 +150,12 @@ main(int argc, char* argv[])
     {
         LogComponentEnable("ZonalLayoutHelper", LOG_LEVEL_ALL);
         LogComponentEnable("IntraZoneSingleStreamLatency", LOG_LEVEL_ALL);
-        LogComponentEnable("OnOffApplication", LOG_LEVEL_ALL);
-        LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
-        LogComponentEnable("Packet", LOG_LEVEL_ALL);
+        LogComponentEnable("ProcessingBridgeNetDevice", LOG_LEVEL_ALL);
+        // LogComponentEnable("OnOffApplication", LOG_LEVEL_ALL);
+        // LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
+        // LogComponentEnable("Packet", LOG_LEVEL_ALL);
+        // LogComponentEnable("DropTailQueue", LOG_LEVEL_ALL);
+        // LogComponentEnable("Queue", LOG_LEVEL_ALL);
     }
 
     Packet::EnablePrinting();

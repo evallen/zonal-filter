@@ -36,8 +36,16 @@ typedef std::vector<int> Topology;
  * \ingroup zonal-research
  *
  * Struct to hold basic configuration information for a zonal topology.
+ * This typename contains a version number that should be updated whenever
+ * the configuration schema is updated to force us to update all the simulations
+ * so that they do conform to the new configuration schema.
+ * 
+ * The goal is to avoid a situation where we add a configuration field
+ * but forget to initialize it in a previous simulation, which would cause
+ * undefined behavior and a potentially different simulation result that
+ * would be annoying to debug.
  */
-struct ZonalLayoutConfiguration 
+struct ZonalLayoutConfigurationV1 
 {
     /** The title of any files that we create. */
     std::string title;
@@ -116,6 +124,20 @@ struct ZonalLayoutConfiguration
 
     /** Whether or not to do detailed PCAP / ASCII tracing. */
     bool tracing;
+
+    /** 
+     * Whether or not to include the security additions in the network,
+     * including the TCAM lookup and the MACsec modules.
+     *
+     * Designed to simulate a network without any of the proposed security
+     * features. Note that that turning this to false will assume there
+     * is no latency in packet switching (such as TCAM lookups), even
+     * though there probably would be in most networks for QoS processing
+     * and the like. The idea is to get a network model that is the fastest
+     * possible with that topology so we can determine what the maximum 
+     * potential overhead of the security additions is.
+     */
+    bool includeSecurityAdditions;
 };
 
 
@@ -181,7 +203,7 @@ public:
      *
      * \param verbose Whether or not to print extra logging information.
      */
-    ZonalLayoutHelper(ZonalLayoutConfiguration config);
+    ZonalLayoutHelper(ZonalLayoutConfigurationV1 config);
 
     /** Construct the simuluation. */
     void Setup();
@@ -216,7 +238,7 @@ public:
     static Time ComputePenaMacSecLatency(uint32_t packet_size_bytes);
 
 private:
-    ZonalLayoutConfiguration config;
+    ZonalLayoutConfigurationV1 config;
 
     CsmaHelper csmaHelper;
     
@@ -250,6 +272,9 @@ private:
     void BuildZoneTopos();
     void BuildBackboneTopo();
     void BuildSwitches();
+
+    void BuildSwitchGatewayLinkSecure(int zone);
+    void BuildSwitchGatewayLinkInsecure(int zone);
 
     void BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices) const;
     void BuildBridgeSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices);
