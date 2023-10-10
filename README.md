@@ -25,9 +25,13 @@ experiment by viewing [here](scripts/inter-zone-single-stream-latency-vary-packe
 |[`inter-zone-single-stream-latency-vary-packet-size`](scripts/inter-zone-single-stream-latency-vary-packet-size/measure.py)|[`analyze.ipynb`](scripts/inter-zone-single-stream-latency-vary-packet-size/analyze.ipynb)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _another_ zone.|
 |[`intra-zone-single-stream-latency-vary-packet-size`](scripts/intra-zone-single-stream-latency-vary-packet-size/measure.py)|[`analyze.ipynb`](scripts/intra-zone-single-stream-latency-vary-packet-size/analyze.ipynb)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _same_ zone.|
 
-![Latency vs. packet size for an inter-zonal stream.](results/inter-zone-single-stream-latency/packet-size/graph.png)
+<p align="center">
+  <img width="70%" src="results/inter-zone-single-stream-latency/packet-size/graph.png">
+</p>
 
-_An example result from `inter-zone-single-stream-latency-vary-paket-size`._
+_An example result from `inter-zone-single-stream-latency-vary-packet-size`. This shows how the 
+latency of a UDP packet travelling across zones varies as a function of its packet size (specifically,
+the size of its IP payload)._
 
 ## Basic Zonal Topology
 
