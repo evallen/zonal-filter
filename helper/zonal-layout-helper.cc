@@ -15,7 +15,7 @@
 #include "zonal-layout-helper.h"
 #include "ns3/processing-bridge-helper.h"
 #include "ns3/processing-bridge-net-device.h"
-#include "ns3/stream-latency-trace-helper.h"
+#include "ns3/stream-trace-helper.h"
 
 #include <cstdint>
 #include <fstream>

@@ -14,7 +14,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/csma-module.h"
-#include "ns3/stream-latency-trace-helper.h"
+#include "ns3/stream-trace-helper.h"
 #include "ns3/processing-bridge-net-device.h"
 
 namespace ns3

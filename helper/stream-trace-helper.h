@@ -2,7 +2,7 @@
  * \file
  * \ingroup zonal-research
  *
- * File to declare the StreamLatencyTraceHelper class.
+ * File to declare the StreamTraceHelper class.
  */
 #ifndef STREAM_LATENCY_TRACING_HELPER_H
 #define STREAM_LATENCY_TRACING_HELPER_H
@@ -26,17 +26,17 @@ namespace ns3
  * It then creates a CSV at the specified location with an entry for each
  * packet that successfully travelled all the way with the fields
  *
- *  send_time,recv_time,delay
+ *  send_time,recv_time,packet_size
  *
  *  where
- *      send_time   - is the time that the packet was sent
- *      recv_time   - is the time that the packet was received
- *      delay       - is the difference recv_time - send_time (i.e., the latency)
+ *      send_time       - is the time that the packet was sent
+ *      recv_time       - is the time that the packet was received
+ *      packet_size     - is the size of the IP payload of the packet
  * 
  * To use it, simply call ``Install`` on the correct sending device and receiving
  * application.
  */
-namespace StreamLatencyTraceHelper
+namespace StreamTraceHelper
 {
 
     /**
@@ -71,7 +71,7 @@ namespace StreamLatencyTraceHelper
     void ReceiveCallback(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> p, const Address &address);
 
     /**
-     * Helper function to write a luine to the CSV.
+     * Helper function to write a line to the CSV.
      *
      * Writes the specified sendTime, recvTime, and computed delay between them.
      *
@@ -79,7 +79,8 @@ namespace StreamLatencyTraceHelper
      * \param sendTime The time the packet was sent.
      * \param recvTime The time the packet was received.
      */
-    void MakePacketEntry(Ptr<OutputStreamWrapper> stream, Time sendTime, Time recvTime);
+    void MakePacketEntry(Ptr<OutputStreamWrapper> stream, Time sendTime, Time recvTime,
+                         uint16_t packetSize);
 };
 
 }

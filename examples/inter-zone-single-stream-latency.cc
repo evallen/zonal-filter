@@ -20,7 +20,7 @@
 #include "ns3/zonal-layout-helper.h"
 #include "ns3/processing-bridge-helper.h"
 #include "ns3/processing-bridge-net-device.h"
-#include "ns3/stream-latency-trace-helper.h"
+#include "ns3/stream-trace-helper.h"
 
 #include <cstdint>
 #include <fstream>
@@ -110,7 +110,7 @@ CreateApplications(ZonalLayoutHelper & zonal)
     app.Start(Seconds(0.0));
     Ptr<PacketSink> receivingApp = DynamicCast<PacketSink>(app.Get(0));
 
-    StreamLatencyTraceHelper::Install(sendingDevice, receivingApp, "stream.csv");
+    StreamTraceHelper::Install(sendingDevice, receivingApp, "stream.csv");
 }
 
 
