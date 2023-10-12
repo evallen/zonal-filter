@@ -33,23 +33,24 @@ namespace ns3
  *      recv_time       - is the time that the packet was received
  *      packet_size     - is the size of the IP payload of the packet
  * 
- * To use it, simply call ``Install`` on the correct sending device and receiving
+ * To use it, simply construct an instance on the correct sending device and receiving
  * application.
  */
-namespace StreamTraceHelper
+class StreamTraceHelper
 {
 
+public:
     /**
      * Installs the trace helper onto a sending device and 
      * receiving application.
      *
-     * \param sendingDevice The CsmaNetDevice to record packets leaving from.
+     * \param sendingApplication The CsmaNetDevice to record packets leaving from.
      * \param receivingApplication The PacketSink application to record packets arriving at.
-     * \param outputFilename The name of the file to write the data to.
+     * \param outputFilename The name of the file to write the data to (no extension).
      */
-    void Install(Ptr<CsmaNetDevice> sendingDevice, 
-                 Ptr<PacketSink> receivingApplication,
-                 std::string outputFilename);
+    StreamTraceHelper(Ptr<OnOffApplication> sendingApplication, 
+                      Ptr<PacketSink> receivingApplication,
+                      std::string outputFilename);
 
     /**
      * The callback that tags each packet with a send timestamp upon transmission.
@@ -69,6 +70,17 @@ namespace StreamTraceHelper
      * \param address The address of the packet that just arrived.
      */
     void ReceiveCallback(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> p, const Address &address);
+
+    /**
+     * Log final metrics such as packet drop rate to a .json file.
+     * Should be called at the end of measurement.
+     */
+    void LogFinalMetrics();
+
+private:
+    int m_sentPackets = 0;
+    int m_receivedPackets = 0;
+    std::string m_outputFilename;
 
     /**
      * Helper function to write a line to the CSV.

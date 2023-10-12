@@ -237,10 +237,29 @@ public:
      */
     static Time ComputePenaMacSecLatency(uint32_t packet_size_bytes);
 
+    /**
+     * Add a stream trace helper to track a flow.
+     *
+     * \param sendingApp The sending application.
+     * \param receivingApp The receiving application.
+     * \param outputFilename The name of the file to log to (no extension)
+     */
+    void AddStreamTraceHelper(Ptr<OnOffApplication> sendingApp,
+                              Ptr<PacketSink> receivingApp,
+                              std::string outputFilename);
+
+    /**
+     * Do final actions that should be done at the end of the simulation,
+     * such as logging final metrics on all stream trace helpers.
+     */
+    void End();
+
 private:
     ZonalLayoutConfigurationV1 config;
 
     CsmaHelper csmaHelper;
+
+    std::vector<StreamTraceHelper> traceHelpers;
     
     // The last element of `zoneSwitchDevices` contains the
     // device looking towards the gateway.

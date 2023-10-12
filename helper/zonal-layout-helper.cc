@@ -112,6 +112,23 @@ ZonalLayoutHelper::PrintNodeInfo() const
 }
 
 void
+ZonalLayoutHelper::AddStreamTraceHelper(Ptr<OnOffApplication> sendingApp,
+                                        Ptr<PacketSink> receivingApp,
+                                        std::string outputFilename)
+{
+    traceHelpers.emplace_back(sendingApp, receivingApp, outputFilename);
+}
+
+void
+ZonalLayoutHelper::End()
+{
+    for (auto tracer : traceHelpers)
+    {
+        tracer.LogFinalMetrics();
+    }
+}
+
+void
 ZonalLayoutHelper::Setup()
 {
     NS_LOG_FUNCTION(this);
