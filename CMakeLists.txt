@@ -15,6 +15,7 @@ set(source_files
   helper/zonal-layout-helper.cc
   helper/processing-bridge-helper.cc
   helper/stream-trace-helper.cc
+  helper/packet-id-tag.cc
 )
 
 set(header_files
@@ -22,6 +23,7 @@ set(header_files
   helper/zonal-layout-helper.h
   helper/processing-bridge-helper.h
   helper/stream-trace-helper.h
+  helper/packet-id-tag.h
 )
 
 build_lib(
