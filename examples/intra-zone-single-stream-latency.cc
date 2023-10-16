@@ -100,7 +100,7 @@ CreateApplications(ZonalLayoutHelper & zonal)
     app = onoff.Install(zonal.GetNode(0, 1));
     app.Start(Seconds(1.1));
     app.Stop(Seconds(10.0));
-    Ptr<CsmaNetDevice> sendingDevice = DynamicCast<CsmaNetDevice>(app.Get(0)->GetNode()->GetDevice(0));
+    Ptr<OnOffApplication> sendingApp = DynamicCast<OnOffApplication>(app.Get(0));
 
     // Create the receiver (zone 0, node 0: 10.1.1.2)
     PacketSinkHelper sink("ns3::UdpSocketFactory",
@@ -109,7 +109,7 @@ CreateApplications(ZonalLayoutHelper & zonal)
     app.Start(Seconds(0.0));
     Ptr<PacketSink> receivingApp = DynamicCast<PacketSink>(app.Get(0));
 
-    StreamTraceHelper::Install(sendingDevice, receivingApp, "stream.csv");
+    zonal.AddStreamTraceHelper(sendingApp, receivingApp, "stream");
 }
 
 
@@ -167,6 +167,8 @@ main(int argc, char* argv[])
     NS_LOG_INFO("Run Simulation.");
     Simulator::Run();
     Simulator::Destroy();
+
+    zonal.End();
     NS_LOG_INFO("Done.");
 
     return 0;

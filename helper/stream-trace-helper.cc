@@ -94,7 +94,7 @@ StreamTraceHelper::LogFinalMetrics()
     double dropRate = 1 - ((double)m_receivedPackets / (double)m_sentPackets);
 
     *finalStream->GetStream() << "{" << std::endl;
-    *finalStream->GetStream() << "\t\"dropRate\": " << dropRate << "," << std::endl;
+    *finalStream->GetStream() << "\t\"dropRate\": " << dropRate << std::endl;
     *finalStream->GetStream() << "}" << std::endl;
 }
 
