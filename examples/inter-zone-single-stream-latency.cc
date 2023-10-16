@@ -151,6 +151,16 @@ RunTrial(ZonalLayoutConfiguration config)
         LogComponentEnable("OnOffApplication", LOG_LEVEL_ALL);
         LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
         LogComponentEnable("StreamTraceHelper", LOG_LEVEL_ALL);
+        LogComponentEnable("ProcessingBridgeNetDevice", ns3::LOG_LEVEL_DEBUG);
+        // LogComponentEnable("DropTailQueue", LOG_LEVEL_ALL);
+        LogComponentEnable("CsmaNetDevice", ns3::LOG_DEBUG);
+        LogComponentEnable("UdpSocketImpl", ns3::LOG_DEBUG);
+        LogComponentEnable("UdpL4Protocol", ns3::LOG_DEBUG);
+        LogComponentEnable("Ipv4L3Protocol", ns3::LOG_DEBUG);
+        LogComponentEnable("Ipv4Interface", ns3::LOG_DEBUG);
+        LogComponentEnable("TrafficControlLayer", ns3::LOG_DEBUG);
+        LogComponentEnable("ArpCache", ns3::LOG_DEBUG);
+        LogComponentEnable("ArpL3Protocol", ns3::LOG_DEBUG);
     }
 
 
@@ -161,6 +171,7 @@ RunTrial(ZonalLayoutConfiguration config)
     CreateApplications(zonal);
 
     NS_LOG_INFO("Run Simulation.");
+    Simulator::Stop(Seconds(11.0));
     Simulator::Run();
     Simulator::Destroy();
 

@@ -124,7 +124,6 @@ ZonalLayoutHelper::End()
 {
     for (auto tracer : traceHelpers)
     {
-        tracer.LogFinalMetrics();
     }
 }
 
@@ -282,7 +281,7 @@ ZonalLayoutHelper::BuildSwitches()
     // Also create the MacSecTrxs
     for (int zone = 0; zone < NumZones(); zone++) {
         Ptr<Node> switchNode = zoneSwitches[zone].Get(0);
-        BuildZonalSwitch(switchNode, zoneSwitchDevices[zone]);
+        BuildZonalSwitch(switchNode, zoneSwitchDevices[zone], zone);
 
         if (config.includeSecurityAdditions) 
         {
@@ -290,14 +289,17 @@ ZonalLayoutHelper::BuildSwitches()
             Ptr<Node> switchMacSecTrx = zoneSwitchMacSecTrxs[zone].Get(0);
             Ptr<Node> gwMacSecTrx = zoneGwMacSecTrxs[zone].Get(0);
 
-            BuildMacSecTrx(switchMacSecTrx, zoneSwitchMacSecTrxDevices[zone]);
-            BuildMacSecTrx(gwMacSecTrx, zoneGwMacSecTrxDevices[zone]);
+            BuildMacSecTrx(switchMacSecTrx, zoneSwitchMacSecTrxDevices[zone],
+                           "ZONE " + std::to_string(zone) + " SW MACSECTRX");
+            BuildMacSecTrx(gwMacSecTrx, zoneGwMacSecTrxDevices[zone],
+                           "ZONE " + std::to_string(zone) + " GW MACSECTRX");
         }
     }
 }
 
 void
-ZonalLayoutHelper::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices) const
+ZonalLayoutHelper::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices,
+                                    int zone) const
 {
     ProcessingBridgeHelper pBridge;
     Time processingDelay;
@@ -318,7 +320,7 @@ ZonalLayoutHelper::BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer &
     pBridge.SetDeviceAttribute("QueueSize",
                                QueueSizeValue(config.zonalControllerInputQueueSize));
 
-    pBridge.Install(switchNode, switchDevices);
+    pBridge.Install(switchNode, switchDevices, "ZONE " + std::to_string(zone) + " SWITCH");
 }
 
 Time 
@@ -333,7 +335,8 @@ ZonalLayoutHelper::ComputePenaMacSecLatency(uint32_t packet_size_bytes) {
 }
 
 void
-ZonalLayoutHelper::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices) const
+ZonalLayoutHelper::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices,
+                                  std::string name) const
 {
     ProcessingBridgeHelper macSecTrx;
     macSecTrx.SetDeviceAttribute("ProcessingDelay",
@@ -344,7 +347,7 @@ ZonalLayoutHelper::BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & swit
                                DataRateValue(config.macsecTrxProcessingSpeed));
     macSecTrx.SetDeviceAttribute("QueueSize",
                                QueueSizeValue(config.macsecTrxInputQueueSize));
-    macSecTrx.Install(trxNode, switchDevices);
+    macSecTrx.Install(trxNode, switchDevices, name);
 }
 
 void

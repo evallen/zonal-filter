@@ -295,10 +295,12 @@ private:
     void BuildSwitchGatewayLinkSecure(int zone);
     void BuildSwitchGatewayLinkInsecure(int zone);
 
-    void BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices) const;
+    void BuildZonalSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices, 
+                          int zone) const;
     void BuildBridgeSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices);
     void BuildOpenFlowSwitch(Ptr<Node> & switchNode, NetDeviceContainer & switchDevices);
-    void BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices) const;
+    void BuildMacSecTrx(Ptr<Node> & trxNode, NetDeviceContainer & switchDevices,
+                        std::string name) const;
 
     void AssignIpAddresses();
 

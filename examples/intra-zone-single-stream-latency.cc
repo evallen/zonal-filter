@@ -165,6 +165,7 @@ main(int argc, char* argv[])
     CreateApplications(zonal);
 
     NS_LOG_INFO("Run Simulation.");
+    Simulator::Stop(Seconds(11.0));
     Simulator::Run();
     Simulator::Destroy();
 

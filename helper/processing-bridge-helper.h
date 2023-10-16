@@ -50,9 +50,10 @@ class ProcessingBridgeHelper
      *
      * \param node The node to install the device in
      * \param c Container of NetDevices to add as zonal bridge ports
+     * \param name The name of the bridge
      * \returns A container holding the added net device.
      */
-    NetDeviceContainer Install(Ptr<Node> node, NetDeviceContainer c);
+    NetDeviceContainer Install(Ptr<Node> node, NetDeviceContainer c, std::string name);
 
     /**
      * This method creates an ns3::ProcessingBridgeNetDevice with the attributes
@@ -62,9 +63,10 @@ class ProcessingBridgeHelper
      *
      * \param nodeName The name of the node to install the device in
      * \param c Container of NetDevices to add as zonal bridge ports
+     * \param name The name of the bridge
      * \returns A container holding the added net device.
      */
-    NetDeviceContainer Install(std::string nodeName, NetDeviceContainer c);
+    NetDeviceContainer Install(std::string nodeName, NetDeviceContainer c, std::string name);
 
   private:
     ObjectFactory m_deviceFactory; //!< Object factory

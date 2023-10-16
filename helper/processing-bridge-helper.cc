@@ -32,17 +32,18 @@ ProcessingBridgeHelper::SetDeviceAttribute(std::string n1, const AttributeValue&
 }
 
 NetDeviceContainer
-ProcessingBridgeHelper::Install(Ptr<Node> node, NetDeviceContainer c)
+ProcessingBridgeHelper::Install(Ptr<Node> node, NetDeviceContainer c, std::string name)
 {
     NS_LOG_FUNCTION_NOARGS();
     NS_LOG_LOGIC("**** Install zonal bridge device on node " << node->GetId());
 
     NetDeviceContainer devs;
     Ptr<ProcessingBridgeNetDevice> dev = m_deviceFactory.Create<ProcessingBridgeNetDevice>();
+    dev->SetAttribute("Name", StringValue(name));
     devs.Add(dev);
     node->AddDevice(dev);
 
-    for (NetDeviceContainer::Iterator i = c.Begin(); i != c.End(); ++i)
+    for (auto i = c.Begin(); i != c.End(); ++i)
     {
         NS_LOG_LOGIC("**** Add Zonal Bridge Port " << *i);
         dev->AddBridgePort(*i);
@@ -51,11 +52,11 @@ ProcessingBridgeHelper::Install(Ptr<Node> node, NetDeviceContainer c)
 }
 
 NetDeviceContainer
-ProcessingBridgeHelper::Install(std::string nodeName, NetDeviceContainer c)
+ProcessingBridgeHelper::Install(std::string nodeName, NetDeviceContainer c, std::string name)
 {
     NS_LOG_FUNCTION_NOARGS();
     Ptr<Node> node = Names::Find<Node>(nodeName);
-    return Install(node, c);
+    return Install(node, c, name);
 }
 
 } // namespace ns3

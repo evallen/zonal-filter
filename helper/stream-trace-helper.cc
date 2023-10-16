@@ -5,6 +5,7 @@
  * Contains implementation of the StreamTraceHelper.
  */
 #include "stream-trace-helper.h"
+#include "packet-id-tag.h"
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -46,12 +47,17 @@ void
 StreamTraceHelper::SendCallback(Ptr<const Packet> p)
 {
     NS_LOG_FUNCTION(this << p);
+    m_sentPackets++;
 
     TimestampTag tag;
     tag.SetTimestamp(Simulator::Now());
     p->AddPacketTag(tag);
 
-    m_sentPackets++;
+    PacketIDTag idTag;
+    idTag.SetID(m_sentPackets);
+    p->AddPacketTag(idTag);
+
+    NS_LOG_DEBUG("SENDING PACKET NUMBER " << m_sentPackets << " AT " << Simulator::Now());
 }
 
 void
@@ -63,12 +69,17 @@ StreamTraceHelper::ReceiveCallback(Ptr<OutputStreamWrapper> stream,
     TimestampTag sendTag;
     p->PeekPacketTag(sendTag);
 
+    PacketIDTag idTag;
+    p->PeekPacketTag(idTag);
+
     Time sendTime = sendTag.GetTimestamp();
     Time recvTime = Simulator::Now();
     uint16_t packetSize = p->GetSize();
     MakePacketEntry(stream, sendTime, recvTime, packetSize);
 
     m_receivedPackets++;
+    NS_LOG_DEBUG("RECEIVED PACKET: " << idTag.GetID());
+    NS_LOG_DEBUG("PACKETS RECEIVED: " << m_receivedPackets << "/" << m_sentPackets);
 }
 
 void

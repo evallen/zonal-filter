@@ -122,6 +122,9 @@ class ProcessingBridgeNetDevice : public BridgeNetDevice
         Callback<Time, uint32_t> LatencyCallback;
     
     private:
+        /** The name of the bridge for debugging purposes */
+        std::string m_name;
+
         /** Determines the latency of a given packet. */
         LatencyCallback m_processingDelayCalculator;
         

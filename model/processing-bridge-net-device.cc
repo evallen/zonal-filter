@@ -7,6 +7,7 @@
  */
 
 #include "processing-bridge-net-device.h"
+#include "ns3/packet-id-tag.h"
 
 namespace ns3
 {
@@ -43,7 +44,12 @@ ProcessingBridgeNetDevice::GetTypeId()
                           "linked network devices for output queue sizes).",
                           QueueSizeValue(QueueSize("100p")),
                           MakeQueueSizeAccessor(&ProcessingBridgeNetDevice::m_queueSize),
-                          MakeQueueSizeChecker());
+                          MakeQueueSizeChecker())
+            .AddAttribute("Name",
+                          "The name of the bridge for debugging purposes",
+                          StringValue("ProcessingBridgeNetDevice"),
+                          MakeStringAccessor(&ProcessingBridgeNetDevice::m_name),
+                          MakeStringChecker());
 
     return tid;
 }
@@ -67,6 +73,12 @@ ProcessingBridgeNetDevice::ReceiveFromDevice(Ptr<NetDevice> incomingPort,
                                             PacketType packetType)
 {
     NS_LOG_FUNCTION_NOARGS();
+
+    PacketIDTag idTag;
+    if (packet->PeekPacketTag(idTag)) 
+    {
+        NS_LOG_DEBUG(m_name << " received packet ID " << idTag.GetID());
+    }
 
 
     uint32_t interface = incomingPort->GetIfIndex();
