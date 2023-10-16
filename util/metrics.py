@@ -7,6 +7,52 @@ that recorded received packet times / sizes.
 import unittest
 import pandas as pd
 import numpy as np
+import util.misc as misc
+
+
+class StreamMetrics:
+
+    def __init__(self, directory, skip=0):
+        """
+        :param directory: The directory containing the stream.csv and stream.json
+        files for this stream.
+        """
+        self.df = pd.read_csv(f"{directory}/stream.csv").iloc[skip:]
+        self.json = misc.get_json(f"{directory}/stream.json")
+    
+    def latencies(self):
+        return compute_latencies(self.df)
+    
+    def mean_latency(self):
+        return compute_mean_latency(self.df)
+
+    def mean_throughput(self):
+        return compute_mean_throughput(self.df)
+    
+    def jitters(self):
+        return compute_jitters(self.df)
+    
+    def mean_jitter(self):
+        return compute_mean_jitter(self.df)
+    
+    def drop_rate(self):
+        return self.json['dropRate']
+
+
+class StreamMetricsList:
+
+    def __init__(self, items):
+        self.items = items
+    
+    
+    def __getattr__(self, attr):
+        if hasattr(StreamMetrics, attr):
+            func = getattr(StreamMetrics, attr)
+            def _wrapper():
+                return np.array([func(item) for item in self.items])
+            return _wrapper
+        else:
+            raise AttributeError("Could not find attribute")
 
 
 def compute_latencies(stream_df):
@@ -43,7 +89,7 @@ def compute_mean_throughput(stream_df):
     return bytes_sent / elapsed_time
 
 
-def compute_jitter(stream_df):
+def compute_jitters(stream_df):
     """
     Computes the jitter of packets in a stream, defined
     as (for each pair of consecutive packets) the difference
@@ -60,7 +106,7 @@ def compute_mean_jitter(stream_df):
     """
     Computes the mean jitter of the stream.
     """
-    return compute_jitter(stream_df).mean()
+    return compute_jitters(stream_df).mean()
 
 
 # === TEST =======================================================================
@@ -114,7 +160,7 @@ class TestAnalyzeStreamMethods(unittest.TestCase):
         })
 
         expected = np.array([1, 2, 2])
-        self.assertListEqual(compute_jitter(test_df).tolist(), expected.tolist())
+        self.assertListEqual(compute_jitters(test_df).tolist(), expected.tolist())
 
         test_df = pd.DataFrame(data={
             'send_time': [0, 10, 20, 30],
@@ -123,7 +169,7 @@ class TestAnalyzeStreamMethods(unittest.TestCase):
         })
 
         expected = np.array([0, 0, 0])
-        self.assertListEqual(compute_jitter(test_df).tolist(), expected.tolist())
+        self.assertListEqual(compute_jitters(test_df).tolist(), expected.tolist())
 
     def test_compute_mean_jitter(self):
         test_df = pd.DataFrame(data={

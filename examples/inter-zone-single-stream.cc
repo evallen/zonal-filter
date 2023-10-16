@@ -1,0 +1,183 @@
+/**
+ * \file 
+ * \ingroup zonal-research
+ *
+ * Implementation for the InterZoneSingleStream simulation.
+ *
+ * Uses a basic ZonalLayoutHelper layout and the default settings.
+ * Simulates just a single stream of traffic from one node to one
+ * in another zone.
+ */
+
+#include "ns3/applications-module.h"
+#include "ns3/core-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/log.h"
+#include "ns3/network-module.h"
+#include "ns3/bridge-module.h"
+
+#include "ns3/zonal-research-module.h"
+#include "ns3/zonal-layout-helper.h"
+#include "ns3/processing-bridge-helper.h"
+#include "ns3/processing-bridge-net-device.h"
+#include "ns3/stream-trace-helper.h"
+
+#include <cstdint>
+#include <fstream>
+#include <initializer_list>
+#include <iostream>
+#include <istream>
+#include <ostream>
+#include <string>
+
+using namespace ns3;
+
+// Used to control version of zonal layout configuration;
+// when the configuration schema changes, so does the underlying
+// typename. This forces us to update the configuration 
+// for this file each time we change the configuration schema.
+typedef ZonalLayoutConfigurationV1 ZonalLayoutConfiguration;
+
+NS_LOG_COMPONENT_DEFINE("InterZoneSingleStream");
+
+
+// === Parameters =================================================================
+
+bool verbose = false; //!< Set by CLI argument
+bool insecure = false; //!< Set by CLI argument
+uint32_t packetSize = 512; //!< Set by CLI argument
+
+ZonalLayoutConfiguration
+GetConfig()
+{
+    ZonalLayoutConfiguration config {};
+
+    config.title = "inter-zone-single-stream";
+
+    config.propagationDelay = Time("2ns");
+
+    config.endpointDataRate = DataRate("100Mbps");
+    config.backboneDataRate = DataRate("1000Mbps");
+
+    config.zonalControllerProcessingSpeed = DataRate("1000Mbps");
+    config.zonalControllerInputQueueSize = QueueSize("100p");
+    config.zonalControllerProcessingDelay = Time("30ns");
+
+    config.macsecTrxProcessingSpeed = DataRate("1000Mbps");
+    config.macsecTrxInputQueueSize = QueueSize("100p");
+    config.macsecTrxProcessingDelay = 
+        LatencyCallback(MakeCallback(ZonalLayoutHelper::ComputePenaMacSecLatency));
+
+    config.zoneCounts = {6, 3, 8, 6};
+
+    config.tracing = false;
+    config.includeSecurityAdditions = !insecure;
+
+    return config;
+}
+
+
+// === Setup Helpers ==============================================================
+
+/**
+ * Create a single UDP stream that we track. 
+ *
+ * Sends from 10.1.2.3 to 10.1.1.2 across the gateway. 
+ */
+void
+CreateApplications(ZonalLayoutHelper & zonal)
+{
+    NS_LOG_FUNCTION_NOARGS();
+
+    uint16_t port = 9; // Discard port (RFC 863)
+
+    ApplicationContainer app;
+
+    // Create the sender (zone 1, node 1: 10.1.2.3)
+    OnOffHelper onoff("ns3::UdpSocketFactory",
+                      Address(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
+    onoff.SetConstantRate(DataRate("500kb/s"), packetSize);
+
+    app = onoff.Install(zonal.GetNode(1, 1));
+    app.Start(Seconds(1.1));
+    app.Stop(Seconds(10.0));
+    Ptr<OnOffApplication> sendingApp = DynamicCast<OnOffApplication>(app.Get(0));
+
+    // Create the receiver (zone 0, node 0: 10.1.1.2)
+    PacketSinkHelper sink("ns3::UdpSocketFactory",
+                          Address(InetSocketAddress(Ipv4Address::GetAny(), port)));
+    app = sink.Install(zonal.GetNode(0, 0));
+    app.Start(Seconds(0.0));
+    Ptr<PacketSink> receivingApp = DynamicCast<PacketSink>(app.Get(0));
+
+    zonal.AddStreamTraceHelper(sendingApp, receivingApp, "stream");
+}
+
+
+// === Command Line Callbacks =====================================================
+
+bool
+SetVerbose(const std::string& value)
+{
+    verbose = true;
+    return true;
+}
+
+void
+ParseCommandLine(int argc, char *argv[])
+{
+    NS_LOG_FUNCTION_NOARGS();
+    CommandLine cmd(__FILE__);
+    cmd.AddValue("v", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
+    cmd.AddValue("verbose", "Verbose (turns on logging).", MakeCallback(&SetVerbose));
+    cmd.AddValue("packet-size", "Size of packets in bytes", packetSize);
+    cmd.AddValue("insecure", "Turns off security additions for a theoretically faster network"
+                             " baseline", insecure);
+    cmd.Parse(argc, argv);
+}
+
+
+// === Runner =====================================================================
+
+void
+RunTrial(ZonalLayoutConfiguration config)
+{
+    ZonalLayoutHelper zonal(config);
+
+    if (verbose)
+    {
+        LogComponentEnable("ZonalLayoutHelper", LOG_LEVEL_ALL);
+        LogComponentEnable("InterZoneSingleStream", LOG_LEVEL_ALL);
+        LogComponentEnable("OnOffApplication", LOG_LEVEL_ALL);
+        LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
+        LogComponentEnable("StreamTraceHelper", LOG_LEVEL_ALL);
+    }
+
+
+    Packet::EnablePrinting();
+    Packet::EnableChecking();
+    zonal.Setup();
+
+    CreateApplications(zonal);
+
+    NS_LOG_INFO("Run Simulation.");
+    Simulator::Run();
+    Simulator::Destroy();
+
+    zonal.End();
+    NS_LOG_INFO("Done.");
+}
+
+
+// === Main =======================================================================
+
+int
+main(int argc, char* argv[])
+{
+    ParseCommandLine(argc, argv);
+
+    ZonalLayoutConfiguration config {GetConfig()};
+    RunTrial(config);
+
+    return 0;
+}
