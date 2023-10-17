@@ -22,8 +22,10 @@ experiment by viewing [here](scripts/inter-zone-single-stream-vary-packet-size/a
 
 | Experiment Name | Main Result File | Description |
 |-----------------|------------------|-------------|
-|[`inter-zone-single-stream-vary-packet-size`](scripts/inter-zone-single-stream-vary-packet-size/measure.py)|[`analyze.ipynb`](scripts/inter-zone-single-stream-vary-packet-size/analyze.ipynb)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _another_ zone.|
-|[`intra-zone-single-stream-vary-packet-size`](scripts/intra-zone-single-stream-vary-packet-size/measure.py)|[`analyze.ipynb`](scripts/intra-zone-single-stream-vary-packet-size/analyze.ipynb)|Measures the latency of a single UDP stream of packets from one node in one zone to another node in _same_ zone.|
+|`inter-zone-single-stream-vary-packet-size`|[`View Results!`](scripts/inter-zone-single-stream-vary-packet-size/analyze.ipynb)|Measures flow characteristics of a single UDP stream of packets from one node in one zone to another node in _another_ zone as the _packet size_ changes.|
+|`intra-zone-single-stream-vary-packet-size`|[`View Results!`](scripts/intra-zone-single-stream-vary-packet-size/analyze.ipynb)|Measures flow characteristics of a single UDP stream of packets from one node in one zone to another node in _the same_ zone as the _packet size_ changes.|
+|`inter-zone-single-stream-vary-throughput`|[`View Results!`](scripts/inter-zone-single-stream-vary-throughput/analyze.ipynb)|Measures flow characteristics of a single UDP stream of packets from one node in one zone to another node in _another_ zone as _throughput_ (i.e., sending datarate) changes.|
+|`intra-zone-single-stream-vary-throughput`|[`View Results!`](scripts/intra-zone-single-stream-vary-throughput/analyze.ipynb)|Measures flow characteristics of a single UDP stream of packets from one node in one zone to another node in _the same_ zone as _throughput_ (i.e., sending datarate) changes.|
 
 <p align="center">
   <img width="70%" src="results/inter-zone-single-stream/packet-size/latency.png">
