@@ -114,9 +114,11 @@ ZonalLayoutHelper::PrintNodeInfo() const
 void
 ZonalLayoutHelper::AddStreamTraceHelper(Ptr<OnOffApplication> sendingApp,
                                         Ptr<PacketSink> receivingApp,
-                                        std::string outputFilename)
+                                        std::string outputFilename,
+                                        Time startTime)
 {
-    traceHelpers.emplace_back(sendingApp, receivingApp, outputFilename);
+    traceHelpers.emplace_back(sendingApp, receivingApp, outputFilename,
+                              startTime);
 }
 
 void

@@ -47,10 +47,12 @@ public:
      * \param sendingApplication The CsmaNetDevice to record packets leaving from.
      * \param receivingApplication The PacketSink application to record packets arriving at.
      * \param outputFilename The name of the file to write the data to (no extension).
+     * \param startTime The time to start tracing.
      */
     StreamTraceHelper(Ptr<OnOffApplication> sendingApplication, 
                       Ptr<PacketSink> receivingApplication,
-                      std::string outputFilename);
+                      std::string outputFilename,
+                      Time startTime);
 
     /**
      * The callback that tags each packet with a send timestamp upon transmission.
@@ -77,10 +79,20 @@ public:
      */
     void LogFinalMetrics();
 
+    enum State
+    {
+        WAITING,
+        ON
+    };
+
 private:
-    int m_sentPackets = 0;
-    int m_receivedPackets = 0;
-    std::string m_outputFilename;
+    uint64_t m_rawSentPackets = 0; //!< Actual number of packets sent, even before we begin tracking.
+    uint64_t m_sentPackets = 0; //!< Number of packets sent while tracking.
+    uint64_t m_receivedPackets = 0; //!< Number of packets received while tracking. 
+    std::string m_outputFilename; //!< Where to output the result files.
+
+    State m_state; //!< State machine for the class. Controls whether it is on or off.
+    uint64_t m_firstPacketToTrack = 0; //!< The ID of the first packet to start tracking.
 
     /**
      * Helper function to write a line to the CSV.
@@ -93,6 +105,11 @@ private:
      */
     void MakePacketEntry(Ptr<OutputStreamWrapper> stream, Time sendTime, Time recvTime,
                          uint16_t packetSize);
+
+    /**
+     * Turn on stream tracing. Useful to start it at a certain time.
+     */
+    void Activate();
 };
 
 }

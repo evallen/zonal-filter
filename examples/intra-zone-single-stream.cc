@@ -109,7 +109,10 @@ CreateApplications(ZonalLayoutHelper & zonal)
     app.Start(Seconds(0.0));
     Ptr<PacketSink> receivingApp = DynamicCast<PacketSink>(app.Get(0));
 
-    zonal.AddStreamTraceHelper(sendingApp, receivingApp, "stream");
+    // We start tracing a little after the application starts sending to avoid
+    // getting any delays or effects from the ARP requests. Those are useful to know about,
+    // but not what we are studying here.
+    zonal.AddStreamTraceHelper(sendingApp, receivingApp, "stream", Seconds(1.5));
 }
 
 

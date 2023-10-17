@@ -5,6 +5,7 @@
  * Contains implementation of the StreamTraceHelper.
  */
 #include "stream-trace-helper.h"
+#include "packet-id-tag.h"
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -20,8 +21,10 @@ NS_LOG_COMPONENT_DEFINE("StreamTraceHelper");
 
 StreamTraceHelper::StreamTraceHelper(Ptr<OnOffApplication> sendingApplication,
                                      Ptr<PacketSink> receivingApplication,
-                                     std::string outputFilename)
-    : m_outputFilename(outputFilename)
+                                     std::string outputFilename,
+                                     Time startTime)
+    : m_outputFilename(outputFilename),
+      m_state(WAITING)
 {
     NS_LOG_FUNCTION(this << sendingApplication << receivingApplication << outputFilename);
 
@@ -40,6 +43,10 @@ StreamTraceHelper::StreamTraceHelper(Ptr<OnOffApplication> sendingApplication,
         "Rx", 
         MakeCallback(&StreamTraceHelper::ReceiveCallback, this, stream)
     );
+
+    Simulator::Schedule(startTime,
+                        &StreamTraceHelper::Activate,
+                        this);
 }
 
 void
@@ -47,11 +54,20 @@ StreamTraceHelper::SendCallback(Ptr<const Packet> p)
 {
     NS_LOG_FUNCTION(this << p);
 
-    TimestampTag tag;
-    tag.SetTimestamp(Simulator::Now());
-    p->AddPacketTag(tag);
+    TimestampTag tsTag;
+    tsTag.SetTimestamp(Simulator::Now());
+    p->AddPacketTag(tsTag);
 
-    m_sentPackets++;
+    PacketIDTag idTag;
+    idTag.SetID(m_rawSentPackets);
+    p->AddPacketTag(idTag);
+
+    m_rawSentPackets++;
+
+    if (m_state == ON)
+    {
+        m_sentPackets++;
+    }
 }
 
 void
@@ -60,15 +76,22 @@ StreamTraceHelper::ReceiveCallback(Ptr<OutputStreamWrapper> stream,
 {
     NS_LOG_FUNCTION(this << stream << p << address);
 
-    TimestampTag sendTag;
-    p->PeekPacketTag(sendTag);
+    TimestampTag tsTag;
+    p->PeekPacketTag(tsTag);
 
-    Time sendTime = sendTag.GetTimestamp();
-    Time recvTime = Simulator::Now();
-    uint16_t packetSize = p->GetSize();
-    MakePacketEntry(stream, sendTime, recvTime, packetSize);
+    PacketIDTag idTag;
+    p->PeekPacketTag(idTag);
 
-    m_receivedPackets++;
+    NS_LOG_DEBUG("RECEIVED PACKET " << idTag.GetID());
+    if (m_state == ON && idTag.GetID() >= m_firstPacketToTrack)
+    {
+        Time sendTime = tsTag.GetTimestamp();
+        Time recvTime = Simulator::Now();
+        uint16_t packetSize = p->GetSize();
+        MakePacketEntry(stream, sendTime, recvTime, packetSize);
+
+        m_receivedPackets++;
+    }
 }
 
 void
@@ -96,6 +119,18 @@ StreamTraceHelper::LogFinalMetrics()
     *finalStream->GetStream() << "{" << std::endl;
     *finalStream->GetStream() << "\t\"dropRate\": " << dropRate << std::endl;
     *finalStream->GetStream() << "}" << std::endl;
+}
+
+void
+StreamTraceHelper::Activate()
+{
+    NS_LOG_FUNCTION(this);
+
+    m_state = ON;
+    m_firstPacketToTrack = m_rawSentPackets;
+
+    NS_LOG_DEBUG("Activating StreamTraceHelper " << this << 
+                 " at packet ID " << m_firstPacketToTrack);
 }
 
 }

@@ -243,10 +243,12 @@ public:
      * \param sendingApp The sending application.
      * \param receivingApp The receiving application.
      * \param outputFilename The name of the file to log to (no extension)
+     * \param startTime The time to start tracing.
      */
     void AddStreamTraceHelper(Ptr<OnOffApplication> sendingApp,
                               Ptr<PacketSink> receivingApp,
-                              std::string outputFilename);
+                              std::string outputFilename,
+                              Time startTime);
 
     /**
      * Do final actions that should be done at the end of the simulation,
