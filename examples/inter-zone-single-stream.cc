@@ -46,6 +46,7 @@ NS_LOG_COMPONENT_DEFINE("InterZoneSingleStream");
 bool verbose = false; //!< Set by CLI argument
 bool insecure = false; //!< Set by CLI argument
 uint32_t packetSize = 512; //!< Set by CLI argument
+DataRate sendingDataRate = DataRate("500Kbps"); //!< Set by CLI argument
 
 ZonalLayoutConfiguration
 GetConfig()
@@ -96,7 +97,7 @@ CreateApplications(ZonalLayoutHelper & zonal)
     // Create the sender (zone 1, node 1: 10.1.2.3)
     OnOffHelper onoff("ns3::UdpSocketFactory",
                       Address(InetSocketAddress(Ipv4Address("10.1.1.2"), port)));
-    onoff.SetConstantRate(DataRate("500kb/s"), packetSize);
+    onoff.SetConstantRate(sendingDataRate, packetSize);
 
     app = onoff.Install(zonal.GetNode(1, 1));
     app.Start(Seconds(1.1));
@@ -136,6 +137,7 @@ ParseCommandLine(int argc, char *argv[])
     cmd.AddValue("packet-size", "Size of packets in bytes", packetSize);
     cmd.AddValue("insecure", "Turns off security additions for a theoretically faster network"
                              " baseline", insecure);
+    cmd.AddValue("sending-rate", "How fast the sender sends data", sendingDataRate);
     cmd.Parse(argc, argv);
 }
 

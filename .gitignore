@@ -1,3 +1,4 @@
 env/
 results/garbage
+results/*/throughput
 **/__pycache__
