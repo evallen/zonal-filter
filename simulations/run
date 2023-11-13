@@ -1,0 +1,4 @@
+#!/bin/sh
+cd `dirname $0`
+../src/zonalfilter -n .:../src $*
+# for shared lib, use: opp_run -l ../src/zonalfilter -n .:../src $*
