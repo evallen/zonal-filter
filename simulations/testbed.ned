@@ -46,7 +46,7 @@ network Testbed extends TsnNetworkBase
             @display("p=375,400");
         }
         masterClock: <> like IEthernetNetworkNode if typename != "" {
-            @display("p=608,671;i=device/card");
+            @display("p=655,464;i=device/card");
         }
         rearRightCam: <> like IEthernetNetworkNode {
             @display("p=317,506;i=device/card");
@@ -85,7 +85,7 @@ network Testbed extends TsnNetworkBase
             @display("p=433,206;i=device/card");
         }
         pcm: <> like IEthernetNetworkNode {
-            @display("p=744,429;i=device/card");
+            @display("p=772,437;i=device/card");
         }
         head: <> like IEthernetNetworkNode {
             @display("p=805,343;i=device/card");
@@ -93,8 +93,14 @@ network Testbed extends TsnNetworkBase
         mdps: <> like IEthernetNetworkNode {
             @display("p=744,275;i=device/card");
         }
-        mdps1: <> like IEthernetNetworkNode {
-            @display("p=624,263;i=device/card");
+        adas: <> like IEthernetNetworkNode {
+            @display("p=608,257;i=device/card");
+        }
+        gps: <> like IEthernetNetworkNode {
+            @display("p=538,273;i=device/card");
+        }
+        v2x: <> like IEthernetNetworkNode {
+            @display("p=507,454;i=device/card");
         }
     connections:
         centralZG.ethg++ <--> Eth1G <--> frontLeftZG.ethg++;
@@ -116,4 +122,10 @@ network Testbed extends TsnNetworkBase
         rearLeftWheel.ethg[0] <--> Eth100M <--> rearLeftZG.ethg[0];
         frontLeftWheel.ethg[0] <--> Eth100M <--> frontLeftZG.ethg[0];
         frontRightZG.ethg[0] <--> Eth100M <--> frontRightWheel.ethg[0];
+        v2x.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
+        gps.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
+        adas.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
+        mdps.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
+        head.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
+        pcm.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
 }
