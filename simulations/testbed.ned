@@ -40,13 +40,13 @@ network Testbed extends TsnNetworkBase
             @display("p=900,417");
         }
         rearLeftZG: <> like IEthernetNetworkNode {
-            @display("p=375,300");
+            @display("p=384,273");
         }
         rearRightZG: <> like IEthernetNetworkNode {
-            @display("p=375,400");
+            @display("p=384,427");
         }
         masterClock: <> like IEthernetNetworkNode if typename != "" {
-            @display("p=655,464;i=device/card");
+            @display("p=608,464;i=device/card");
         }
         rearRightCam: <> like IEthernetNetworkNode {
             @display("p=317,506;i=device/card");
@@ -85,47 +85,65 @@ network Testbed extends TsnNetworkBase
             @display("p=433,206;i=device/card");
         }
         pcm: <> like IEthernetNetworkNode {
-            @display("p=772,437;i=device/card");
+            @display("p=744,464;i=device/card");
         }
         head: <> like IEthernetNetworkNode {
             @display("p=805,343;i=device/card");
         }
         mdps: <> like IEthernetNetworkNode {
-            @display("p=744,275;i=device/card");
+            @display("p=705,241;i=device/card");
         }
         adas: <> like IEthernetNetworkNode {
-            @display("p=608,257;i=device/card");
+            @display("p=599,229;i=device/card");
         }
         gps: <> like IEthernetNetworkNode {
-            @display("p=538,273;i=device/card");
+            @display("p=526,241;i=device/card");
         }
         v2x: <> like IEthernetNetworkNode {
             @display("p=507,454;i=device/card");
         }
+        rightSpeakers: <> like IEthernetNetworkNode {
+            @display("p=324,378;i=device/card");
+        }
+        leftSpeakers: <> like IEthernetNetworkNode {
+            @display("p=324,313;i=device/card");
+        }
     connections:
+        // Switches
         centralZG.ethg++ <--> Eth1G <--> frontLeftZG.ethg++;
         centralZG.ethg++ <--> Eth1G <--> frontRightZG.ethg++;
+        centralZG.ethg++ <--> Eth1G <--> rearLeftZG.ethg++;
+        centralZG.ethg++ <--> Eth1G <--> rearRightZG.ethg++;
         frontLeftZG.ethg++ <--> Eth1G <--> frontRightZG.ethg++;
         rearLeftZG.ethg++ <--> Eth1G <--> rearRightZG.ethg++;
+        frontLeftZG.ethg++ <--> Eth1G <--> rearLeftZG.ethg++;
+        frontRightZG.ethg++ <--> Eth1G <--> rearRightZG.ethg++;
+
+        // ECUs
         masterClock.ethg++ <--> Eth100M <--> centralZG.ethg++ if exists(masterClock);
-        rearLeftZG.ethg[0] <--> Eth1G <--> centralZG.ethg[0];
-        rearRightZG.ethg[0] <--> Eth1G <--> centralZG.ethg[0];
-        frontRightCam.ethg[0] <--> Eth100M <--> frontRightZG.ethg[0];
-        frontLeftCam.ethg[0] <--> Eth100M <--> frontLeftZG.ethg[0];
-        rearLeftCam.ethg[0] <--> Eth100M <--> rearLeftZG.ethg[0];
-        rearRightCam.ethg[0] <--> Eth100M <--> rearRightZG.ethg[0];
-        rearRightUltrasonic.ethg[0] <--> Eth100M <--> rearRightZG.ethg[0];
-        rearLeftUltrasonic.ethg[0] <--> Eth100M <--> rearLeftZG.ethg[0];
-        frontLeftUltrasonic.ethg[0] <--> Eth100M <--> frontLeftZG.ethg[0];
-        frontRightUltrasonic.ethg[0] <--> Eth100M <--> frontRightZG.ethg[0];
-        rearRightZG.ethg[0] <--> Eth100M <--> rearRightWheel.ethg[0];
-        rearLeftWheel.ethg[0] <--> Eth100M <--> rearLeftZG.ethg[0];
-        frontLeftWheel.ethg[0] <--> Eth100M <--> frontLeftZG.ethg[0];
-        frontRightZG.ethg[0] <--> Eth100M <--> frontRightWheel.ethg[0];
-        v2x.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
-        gps.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
-        adas.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
-        mdps.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
-        head.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
-        pcm.ethg[0] <--> Eth100M <--> centralZG.ethg[0];
+
+        frontLeftUltrasonic.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
+        frontRightUltrasonic.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
+        rearLeftUltrasonic.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+        rearRightUltrasonic.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+
+        frontLeftWheel.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
+        frontRightWheel.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
+        rearLeftWheel.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+        rearRightWheel.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+
+        frontLeftCam.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
+        frontRightCam.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
+        rearLeftCam.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+        rearRightCam.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+
+        v2x.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        gps.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        adas.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        mdps.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        head.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        pcm.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        
+        rightSpeakers.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+        leftSpeakers.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
 }
