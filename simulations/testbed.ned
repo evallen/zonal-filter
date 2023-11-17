@@ -109,6 +109,8 @@ network Testbed extends TsnNetworkBase
             @display("p=324,313;i=device/card");
         }
     connections:
+        masterClock.ethg++ <--> Eth100M <--> centralZG.ethg++ if exists(masterClock);
+        
         // Switches
         centralZG.ethg++ <--> Eth1G <--> frontLeftZG.ethg++;
         centralZG.ethg++ <--> Eth1G <--> frontRightZG.ethg++;
@@ -120,8 +122,6 @@ network Testbed extends TsnNetworkBase
         frontRightZG.ethg++ <--> Eth1G <--> rearRightZG.ethg++;
 
         // ECUs
-        masterClock.ethg++ <--> Eth100M <--> centralZG.ethg++ if exists(masterClock);
-
         frontLeftUltrasonic.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
         frontRightUltrasonic.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
         rearLeftUltrasonic.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
@@ -139,7 +139,7 @@ network Testbed extends TsnNetworkBase
 
         v2x.ethg++ <--> Eth100M <--> centralZG.ethg++;
         gps.ethg++ <--> Eth100M <--> centralZG.ethg++;
-        adas.ethg++ <--> Eth100M <--> centralZG.ethg++;
+        adas.ethg++ <--> Eth1G <--> centralZG.ethg++;
         mdps.ethg++ <--> Eth100M <--> centralZG.ethg++;
         head.ethg++ <--> Eth100M <--> centralZG.ethg++;
         pcm.ethg++ <--> Eth100M <--> centralZG.ethg++;

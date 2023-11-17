@@ -1,4 +1,8 @@
 env/
 **/__pycache__
 .settings/
+results/
+*.qtenvrc
+*.swp
+out/
 
