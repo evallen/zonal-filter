@@ -122,28 +122,34 @@ network Testbed extends TsnNetworkBase
         frontRightZG.ethg++ <--> Eth1G <--> rearRightZG.ethg++;
 
         // ECUs
+
+	// FL ZG (starts: 'eth2')
         frontLeftUltrasonic.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
-        frontRightUltrasonic.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
-        rearLeftUltrasonic.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
-        rearRightUltrasonic.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
-
         frontLeftWheel.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
-        frontRightWheel.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
-        rearLeftWheel.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
-        rearRightWheel.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
-
         frontLeftCam.ethg++ <--> Eth100M <--> frontLeftZG.ethg++;
-        frontRightCam.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
-        rearLeftCam.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
-        rearRightCam.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
 
+	// FR ZG (starts: 'eth2')
+        frontRightUltrasonic.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
+        frontRightWheel.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
+        frontRightCam.ethg++ <--> Eth100M <--> frontRightZG.ethg++;
+
+	// RL ZG (starts: 'eth2')
+        rearLeftUltrasonic.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+        rearLeftWheel.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+        rearLeftCam.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+        leftSpeakers.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
+
+	// RR ZG (starts: 'eth2')
+        rearRightUltrasonic.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+        rearRightWheel.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+        rearRightCam.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+        rightSpeakers.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
+
+	// Central ZG (starts: 'eth5')
         v2x.ethg++ <--> Eth100M <--> centralZG.ethg++;
         gps.ethg++ <--> Eth100M <--> centralZG.ethg++;
         adas.ethg++ <--> Eth1G <--> centralZG.ethg++;
         mdps.ethg++ <--> Eth100M <--> centralZG.ethg++;
         head.ethg++ <--> Eth100M <--> centralZG.ethg++;
         pcm.ethg++ <--> Eth100M <--> centralZG.ethg++;
-        
-        rightSpeakers.ethg++ <--> Eth100M <--> rearRightZG.ethg++;
-        leftSpeakers.ethg++ <--> Eth100M <--> rearLeftZG.ethg++;
 }

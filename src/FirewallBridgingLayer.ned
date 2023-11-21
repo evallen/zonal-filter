@@ -16,6 +16,8 @@
 import inet.linklayer.ethernet.common.BridgingLayer;
 
 import inet.protocolelement.contract.IProtocolLayer;
+import inet.protocolelement.processing.IProcessingDelayLayer;
+import inet.protocolelement.processing.ProcessingDelayLayer;
 
 //
 // An extension of the original BridgingLayer that 
@@ -24,13 +26,18 @@ import inet.protocolelement.contract.IProtocolLayer;
 module FirewallBridgingLayer extends BridgingLayer
 {
     submodules:
-        firewallLayer: <default("StreamFilterLayer")> like IProtocolLayer {
-            @display("p=420,1279");
+        firewallProcessingDelayLayer: <default("ProcessingDelayLayer")> like IProcessingDelayLayer {
+            @display("p=420,1268");
+        }
+        firewallLayer: <default("FirewallFilterLayer")> like IProtocolLayer {
+            @display("p=420,1367");
         }
     connections:
         lowerLayerIn --> { @reconnect; } --> firewallLayer.lowerLayerIn;
-        firewallLayer.upperLayerOut --> { @reconnect; } --> vlanPolicy.lowerLayerIn;
+        firewallLayer.upperLayerOut --> firewallProcessingDelayLayer.lowerLayerIn;
+        firewallProcessingDelayLayer.upperLayerOut --> { @reconnect; } --> vlanPolicy.lowerLayerIn;
 
-        vlanPolicy.lowerLayerOut --> { @reconnect; } --> firewallLayer.upperLayerIn;
+        vlanPolicy.lowerLayerOut --> { @reconnect; } --> firewallProcessingDelayLayer.upperLayerIn;
+        firewallProcessingDelayLayer.lowerLayerOut --> firewallLayer.upperLayerIn;
         firewallLayer.lowerLayerOut --> { @reconnect; } --> lowerLayerOut;
 }

@@ -16,18 +16,36 @@
 #ifndef __ZONALFILTER_FIREWALLFILTER_H_
 #define __ZONALFILTER_FIREWALLFILTER_H_
 
-#include <omnetpp.h>
+#include "inet/common/packet/PacketFilter.h"
+#include "inet/queueing/base/PacketFilterBase.h"
+#include "inet/common/ModuleRefByPar.h"
+#include "inet/common/IProtocolRegistrationListener.h"
+#include "inet/networklayer/contract/IInterfaceTable.h"
 
-using namespace omnetpp;
+using namespace inet::queueing;
+using namespace inet;
 
-/**
- * TODO - Generated class
- */
-class FirewallFilter : public cSimpleModule
+class FirewallFilter : public PacketFilterBase, public TransparentProtocolRegistrationListener
 {
   protected:
-    virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
+    ModuleRefByPar<IInterfaceTable> interfaceTable;
+    cValueMap *rules = nullptr;
+
+  private:
+    bool _checkRules(const char *interfaceName, const char *type, const char *inoutkey) const;
+    bool checkRulesIn(const char *interfaceName, const char *type) const;
+    bool checkRulesOut(const char *interfaceName, const char *type) const;
+    bool checkRules(const char *interfaceName, const char *type) const;
+
+    const char * getInterfaceName(const Packet * packet) const;
+
+  protected:
+    virtual void initialize(int stage) override;
+
+    virtual cGate *getRegistrationForwardingGate(cGate *gate) override;
+
+    virtual bool matchesPacket(const Packet *packet) const override;
+
 };
 
 #endif

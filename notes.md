@@ -58,12 +58,12 @@
 ### TODO
 * **DONE** Create new child of UdpSourceApplication to put tags on packets.
 * **DONE** Label all Udp streams with the correct tag in the omnetpp.ini.
-* Create filter module to go into the ZGs that ensures:
+* **DONE** Create filter module to go into the ZGs that ensures:
 	* All inbound packets have type tag that matches their 
           source interface as defined in a given configuration
 	  if the source interface is an ECU interface.
 	* All outbound packets have type tag that matches their
           destination interface as defined in a given configuration
           if the destination interface is an ECU interface.
-* Define the security configuration for each ZG with ECUs. 
-* Add processing delay overhead
+* **DONE** Define the security configuration for each ZG with ECUs. 
+* **DONE** Add processing delay overhead

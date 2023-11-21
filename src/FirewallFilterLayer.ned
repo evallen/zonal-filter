@@ -19,4 +19,8 @@ module FirewallFilterLayer extends StreamFilterLayer
 {
     parameters:
         ingress.typename = "FirewallFilter";
+        ingress.isIngress = true;
+        
+        egress.typename = "FirewallFilter";
+        egress.isIngress = false;
 }
