@@ -13,18 +13,12 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include "TypeTagger.h"
-#include "TypeTag_m.h"
+#include "CryptoRemover.h"
+#include "inet/common/packet/chunk/ByteCountChunk.h"
 
-Define_Module(TypeTagger);
+Define_Module(CryptoRemover);
 
-void TypeTagger::initialize(int stage)
-{
-    PacketMarkerBase::initialize(stage);
+void CryptoRemover::processPacket(Packet *packet) {
+    packet->popAtBack<ByteCountChunk>(B(par("trailerLength").intValue()));
 }
 
-void TypeTagger::markPacket(Packet *packet)
-{
-    auto typeTag = packet->addRegionTag<TypeTag>();
-    typeTag->setType(par("type").stringValue());
-}

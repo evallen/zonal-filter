@@ -13,14 +13,23 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-import inet.linklayer.ieee8021q.StreamFilterLayer;
+#ifndef __ZONALFILTER_CRYPTOREMOVER_H_
+#define __ZONALFILTER_CRYPTOREMOVER_H_
 
-module FirewallFilterLayer extends StreamFilterLayer
+#include "inet/queueing/base/PacketFlowBase.h"
+#include <omnetpp.h>
+
+using namespace omnetpp;
+using namespace inet;
+using namespace queueing;
+
+/**
+ * TODO - Generated class
+ */
+class CryptoRemover : public PacketFlowBase
 {
-    parameters:
-        ingress.typename = "FirewallFilter";
-        ingress.isIngress = true;
-        
-        egress.typename = "FirewallFilter";
-        egress.isIngress = false;
-}
+  protected:
+    virtual void processPacket(Packet *packet);
+};
+
+#endif

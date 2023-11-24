@@ -13,23 +13,17 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-import inet.queueing.base.PacketMarkerBase;
-import inet.queueing.contract.IPacketMarker;
+import inet.queueing.base.PacketFlowBase;
+import inet.queueing.contract.IPacketFlow;
+
+package zonalfilter.crypto;
 
 //
 // TODO auto-generated module
 //
-simple TypeTagger extends PacketMarkerBase like IPacketMarker
+simple CryptoRemover extends PacketFlowBase like IPacketFlow
 {
     parameters:
-        // Would be more realistic if this was an int ID, but we're using tags anyway 
-        // so it's all metadata.
-        //
-        // In reality, we'd attach a byte or two with an int ID to the packet and use that
-        // as the type. For simulation purposes, we do this so it's easier for us to see
-        // the types and just tack on an extra byte or two to simulate the overhead
-        // of the ID itself. 
-        string type;
-        @display("i=block/star");
-        @class(TypeTagger);
+        int trailerLength;
+        @class(CryptoRemover);
 }

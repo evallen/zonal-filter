@@ -1,7 +1,7 @@
 ## TIMELINE
 
 **WEEK 1**
-* Monday - Tuesday. Implement firewall idea. 
+* **DONE** Monday - Tuesday. Implement firewall idea. 
 	* Watch 1.5 hour lecture each day.
 * Wednesday - Thursday. Implement cryptography alternative idea. 
 	* Watch 1.5 hr lecture each day.
@@ -55,7 +55,43 @@
 	  (or just add a byte or two to the overall payload). 
 	* Override UdpSourceApplication to include this tag? < TODO
 
+## Alternative Cryptography Plans
+* Idea 1 - Asymmetric signing / verifying
+	* Each node signs messages with asymmetric method 
+          such as RSA, each node verifies all messages
+          with similar method.
+* Idea 2 - Symmetric MACs
+	* Suppose each pair of nodes has a symmetric keypair
+          (not very realistic, but this would hopefully give
+           us a 'best-case' bound of cryptography).
+	* Each node creates a MAC for each message, attaches it,
+          and verifies it at the receiving side. 
+
+* Important - make sure it's relevant to modern literature.
+	* Want it to reflect recent ideas / papers so we can
+	  show that our idea compares well against recent ideas
+	  (instead of something that was given up years ago).
+
 ### TODO
+
+## Alternative Cryptography Idea TODO
+* **DONE** Decide on alternative cryptography scheme plan
+* For now - assume each node sending a message must do
+  *some* operation (signing / MAC creation, etc) and attaches
+  *some* additional data (signature / MAC). Assume each node
+  receiving a message does the same and strips that part of
+  the data.
+
+## Future simulation ideas for paper
+* Current firewall idea assumes everything is done with ultra-fast
+  TCAMs, which may be difficult to actually implement
+* Would be nice to show how fast it would be if you have to divert
+  some traffic to SW / other filter techniques, and evaluate that as
+  well
+* Final comparison could be (full TCAM firewall / hybrid firewall /
+  cryptography... )
+
+## Firewall TODO
 * **DONE** Create new child of UdpSourceApplication to put tags on packets.
 * **DONE** Label all Udp streams with the correct tag in the omnetpp.ini.
 * **DONE** Create filter module to go into the ZGs that ensures:

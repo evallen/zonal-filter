@@ -28,7 +28,7 @@
 #include <sstream>
 #include <memory>
 #include <type_traits>
-#include "TypeTag_m.h"
+#include "zonalfilter/firewall/TypeTag_m.h"
 
 namespace omnetpp {
 

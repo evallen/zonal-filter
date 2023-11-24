@@ -13,10 +13,13 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-import inet.applications.udpapp.UdpSourceApp;
+import zonalfilter.crypto.*;
 
-module TypedUdpSourceApp extends UdpSourceApp
+package zonalfilter.common;
+
+module TypedUdpSinkApp extends TypedUdpAppBase
 {
     parameters:
-        tagger.typename = "TypeTagger";
+        source.typename = "";
+        io.destPort = -1;
 }

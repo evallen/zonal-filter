@@ -11,21 +11,14 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-//
+// 
 
-import inet.node.tsn.TsnSwitch;
+#include "CryptoAdder.h"
+#include "inet/common/packet/chunk/ByteCountChunk.h"
 
-//
-// This module represents a Firewall Zonal Gateway, which is just a TsnSwitch with
-// the added features from our project.
-//
-// Specifically, this module checks all messages coming from one of its ECU ports to make sure 
-// that the message type is allowed to be sent by that ECU. 
-//
-// It also checks all messages going toward one of its ECU ports to make sure that the message
-// is allowed to be received by that ECU.
-//
-module FirewallZonalGateway extends TsnSwitch
-{
-    
+Define_Module(CryptoAdder);
+
+void CryptoAdder::processPacket(Packet *packet) {
+    auto cryptoTrailer = makeShared<ByteCountChunk>(B(par("trailerLength").intValue()));
+    packet->insertAtBack(cryptoTrailer);
 }

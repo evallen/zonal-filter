@@ -13,6 +13,8 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
+package zonalfilter.firewall;
+
 import inet.queueing.base.PacketFilterBase;
 import inet.queueing.contract.IPacketFilter;
 

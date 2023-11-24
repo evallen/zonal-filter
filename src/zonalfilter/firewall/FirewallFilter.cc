@@ -13,9 +13,9 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include "FirewallFilter.h"
+#include "zonalfilter/firewall/FirewallFilter.h"
 #include "inet/linklayer/common/InterfaceTag_m.h"
-#include "TypeTag_m.h"
+#include "zonalfilter/firewall/TypeTag_m.h"
 #include "inet/networklayer/common/NetworkInterface.h"
 #include <omnetpp.h>
 

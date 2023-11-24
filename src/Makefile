@@ -1,13 +1,13 @@
 #
-# OMNeT++/OMNEST Makefile for zonalfilter
+# OMNeT++/OMNEST Makefile for zonalfilterexec
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -KINET_PROJ=../../inet4.5 -DINET_IMPORT -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/src -lINET$$\(D\)
+#  opp_makemake -f --deep -o zonalfilterexec -KINET_PROJ=../../inet4.5 -DINET_IMPORT -I. -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/src -lINET$$\(D\)
 #
 
 # Name of target to be created (-o option)
 TARGET_DIR = .
-TARGET_NAME = zonalfilter$(D)
+TARGET_NAME = zonalfilterexec$(D)
 TARGET = $(TARGET_NAME)$(EXE_SUFFIX)
 TARGET_IMPLIB = $(TARGET_NAME)$(IMPLIB_SUFFIX)
 TARGET_IMPDEF = $(TARGET_NAME)$(IMPDEF_SUFFIX)
@@ -19,7 +19,7 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(QTENV_LIBS) $(CMDENV_LIBS)
 #USERIF_LIBS = $(QTENV_LIBS)
 
 # C++ include paths (with -I)
-INCLUDE_PATH = -I$(INET_PROJ)/src
+INCLUDE_PATH = -I. -I$(INET_PROJ)/src
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -33,11 +33,11 @@ PROJECTRELATIVE_PATH = src
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/FirewallFilter.o $O/TypeTagger.o $O/TypeTag_m.o
+OBJS = $O/zonalfilter/crypto/CryptoAdder.o $O/zonalfilter/crypto/CryptoRemover.o $O/zonalfilter/firewall/FirewallFilter.o $O/zonalfilter/firewall/TypeTagger.o $O/zonalfilter/firewall/TypeTag_m.o
 
 # Message files
 MSGFILES = \
-    TypeTag.msg
+    zonalfilter/firewall/TypeTag.msg
 
 # SM files
 SMFILES =
