@@ -1,21 +1,8 @@
 ## TIMELINE
 
-**WEEK 1**
-* **DONE** Monday - Tuesday. Implement firewall idea. 
-	* Watch 1.5 hour lecture each day.
-* Wednesday - Thursday. Implement cryptography alternative idea. 
-	* Watch 1.5 hr lecture each day.
-* Friday. Data analysis; playing with data more. Clean up TSN stuff.
-	* Assignment 4, ECE5560.
-* Saturday. Begin writing up paper.
-	* Finish Assignment 4, ECE5560. 
-* Sunday. SKIP
-
 **WEEK 2**
-* Monday - Tuesday. Write technical method section draft;
-		    results draft.
-* Wednesday - Thursday. Write introduction, related work, conclusion.
-* Friday. Polish / flex / submit for initial review. **DEC 1 DRAFT DUE**
+* Monday - Write draft of idea section, evaluation method
+           **DONE** Get _a_ graph - doesn't have to be good yet!
 
 **WEEK 3, WEEK 4**
 * Polish, run more experiments, make nice!
