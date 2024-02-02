@@ -1,4 +1,8 @@
 env/
-results/garbage
-results/*/throughput
 **/__pycache__
+.settings/
+results/
+*.qtenvrc
+*.swp
+out/
+
