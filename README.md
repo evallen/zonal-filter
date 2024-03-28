@@ -3,7 +3,8 @@
 This repository contains all the code and links to the data
 used in the paper _The Advantages of Distributed TCAM Firewalls
 in Automotive Real-Time Switched Zonal Networks_ accepted
-at [VehicleSec '24](https://www.ndss-symposium.org/ndss2024/co-located-events/vehiclesec/) (awaiting online publication).
+at [VehicleSec '24](https://www.ndss-symposium.org/ndss2024/co-located-events/vehiclesec/) 
+([paper link](https://www.ndss-symposium.org/ndss-paper/auto-draft-459/)).
 
 ![A screenshot of the IVN](./doc/simulation.gif)
 
